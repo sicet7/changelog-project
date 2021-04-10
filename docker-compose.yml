@@ -2,6 +2,7 @@ version: "3.8"
 services:
     web:
         image: nginx:1.19.9-alpine
+        container_name: nginx
         ports:
             - 80:80
         volumes:
@@ -10,6 +11,8 @@ services:
         links:
             - php
     php:
+        user: 1000:1000
         image: php:8.0-fpm-alpine
+        container_name: php
         volumes:
             - ./src:/var/www/html
