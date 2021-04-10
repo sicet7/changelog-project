@@ -7,7 +7,9 @@
         "php-di/slim-bridge": "^3.1",
         "twig/twig": "^3.3",
         "twbs/bootstrap": "^4.6",
-        "guzzlehttp/guzzle": "^7.3"
+        "guzzlehttp/guzzle": "^7.3",
+        "doctrine/migrations": "^3.1",
+        "kelvinmo/simplejwt": "^0.5.1"
     },
     "autoload": {
         "psr-4": {

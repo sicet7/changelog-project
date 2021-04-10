@@ -22,7 +22,11 @@ class ContextHelper
     {
         return [
             'lib' => [
-                'jquery' => $this->libHelper->getJquery()
+                'jquery' => $this->libHelper->getJquery(),
+                'bootstrap' => [
+                    'js' => $this->libHelper->getBootstrapJs(),
+                    'css' => $this->libHelper->getBootstrapCss(),
+                ]
             ]
         ];
     }

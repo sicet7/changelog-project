@@ -2,7 +2,9 @@
 
 namespace App\Controllers;
 
+use App\Helpers\AuthHelper;
 use App\Helpers\ContextHelper;
+use App\Helpers\RedirectHelper;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Log\LoggerInterface;
@@ -11,35 +13,27 @@ use Twig\Environment;
 class HomeController
 {
     /**
-     * @var Environment
+     * @var RedirectHelper
      */
-    private Environment $twig;
+    private RedirectHelper $redirectHelper;
 
     /**
-     * @var ContextHelper
+     * @var AuthHelper
      */
-    private ContextHelper $contextHelper;
-
-    /**
-     * @var LoggerInterface
-     */
-    private LoggerInterface $logger;
+    private AuthHelper $authHelper;
 
     /**
      * HomeController constructor.
-     * @param LoggerInterface $logger
-     * @param Environment $twig
-     * @param ContextHelper $contextHelper
+     * @param RedirectHelper $redirectHelper
+     * @param AuthHelper $authHelper
      */
     public function __construct(
-        LoggerInterface $logger,
-        Environment $twig,
-        ContextHelper $contextHelper
+        RedirectHelper $redirectHelper,
+        AuthHelper $authHelper
     )
     {
-        $this->twig = $twig;
-        $this->contextHelper = $contextHelper;
-        $this->logger = $logger;
+        $this->redirectHelper = $redirectHelper;
+        $this->authHelper = $authHelper;
     }
 
     /**
@@ -49,20 +43,9 @@ class HomeController
      */
     public function get(Request $request, Response $response)
     {
-        try {
-            $html = date('c');
-
-            $context = $this->contextHelper->makeContext([
-                'variable' => $html,
-                'title' => 'Page title test'
-            ]);
-
-            $response->getBody()->write($this->twig->render('variable.twig', $context));
-            return $response;
-        } catch (\Exception $exception) {
-            $this->logger->error($exception);
-            $response->withStatus(502, 'An Error occurred, please check the logs for more information.');
-            $response->getBody()->write('An Error occurred, please check the logs for more information.');
+        if ($this->authHelper->isAuthenticated()) {
+            return $this->redirectHelper->tmp($response, '/dashboard');
         }
+        return $this->redirectHelper->tmp($response, '/login');
     }
 }

@@ -66,9 +66,22 @@ class LibHelper
         }
     }
 
+    /**
+     * @return string
+     */
+    public function getBootstrapJs()
+    {
+        $vendorPath = $this->container->get('vendor.path');
+        return file_get_contents($vendorPath . '/twbs/bootstrap/dist/js/bootstrap.bundle.min.js') ?? '';
+    }
+
+    /**
+     * @return string
+     */
     public function getBootstrapCss()
     {
-
+        $vendorPath = $this->container->get('vendor.path');
+        return file_get_contents($vendorPath . '/twbs/bootstrap/dist/css/bootstrap.min.css') ?? '';
     }
 
 }
