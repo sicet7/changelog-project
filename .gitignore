@@ -1,3 +1,5 @@
 .idea
 src/vendor
 src/cache
+.env
+src/var

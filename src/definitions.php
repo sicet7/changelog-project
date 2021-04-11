@@ -6,6 +6,7 @@ use App\Helpers\CacheHelper;
 use App\Helpers\LibHelper;
 use App\Helpers\LogHelper;
 use App\Helpers\RedirectHelper;
+use App\Middleware\AuthMiddleware;
 use Doctrine\ORM\Configuration;
 use Doctrine\ORM\EntityManager;
 use Doctrine\Persistence\Mapping\Driver\MappingDriver;
@@ -97,8 +98,11 @@ return [
     AuthHelper::class => create(AuthHelper::class)
         ->constructor(
             get(Base64Helper::class),
-            get(ContainerInterface::class)
+            get(ContainerInterface::class),
+            get(CacheHelper::class),
+            get(LoggerInterface::class)
         ),
+    //AuthMiddleware::class => create(AuthMiddleware::class),
     MappingDriver::class => function (ContainerInterface $container) {
         return new StaticPHPDriver($container->get('database.entity.paths'));
     },

@@ -16,3 +16,5 @@ services:
         container_name: php
         volumes:
             - ./src:/var/www/html
+        env_file:
+            - .env
