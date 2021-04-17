@@ -10,7 +10,8 @@
         "guzzlehttp/guzzle": "^7.3",
         "doctrine/migrations": "^3.1",
         "kelvinmo/simplejwt": "^0.5.1",
-        "league/commonmark": "^1.5"
+        "league/commonmark": "^1.5",
+        "fortawesome/font-awesome": "v4.7.0"
     },
     "autoload": {
         "psr-4": {
