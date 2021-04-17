@@ -7,11 +7,13 @@ use App\Helpers\ContextHelper;
 use App\Helpers\RedirectHelper;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
-use Psr\Log\LoggerInterface;
+use Slim\Psr7\Factory\ResponseFactory;
 use Twig\Environment;
 
-class HomeController
+class HomeController extends AbstractController
 {
+    public const TEMPLATE = 'pages/toolbox.twig';
+
     /**
      * @var RedirectHelper
      */
@@ -22,16 +24,14 @@ class HomeController
      */
     private AuthHelper $authHelper;
 
-    /**
-     * HomeController constructor.
-     * @param RedirectHelper $redirectHelper
-     * @param AuthHelper $authHelper
-     */
     public function __construct(
+        Environment $twig,
+        ContextHelper $contextHelper,
+        ResponseFactory $responseFactory,
         RedirectHelper $redirectHelper,
         AuthHelper $authHelper
-    )
-    {
+    ) {
+        parent::__construct($twig, $contextHelper, $responseFactory);
         $this->redirectHelper = $redirectHelper;
         $this->authHelper = $authHelper;
     }
@@ -43,9 +43,13 @@ class HomeController
      */
     public function get(Request $request, Response $response)
     {
-        if ($this->authHelper->isAuthenticated()) {
-            return $this->redirectHelper->tmp($response, '/dashboard');
+        if (!$this->authHelper->isAuthenticated()) {
+            return $this->redirectHelper->tmp($response, '/login');
         }
-        return $this->redirectHelper->tmp($response, '/login');
+        return $this->renderResponse([
+            'navbar' => [
+                'title' => 'Toolbox'
+            ]
+        ]);
     }
 }

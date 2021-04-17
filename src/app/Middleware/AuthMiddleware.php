@@ -26,6 +26,12 @@ class AuthMiddleware extends Middleware
      */
     private ResponseFactory $responseFactory;
 
+    /**
+     * AuthMiddleware constructor.
+     * @param AuthHelper $authHelper
+     * @param RedirectHelper $redirectHelper
+     * @param ResponseFactory $responseFactory
+     */
     public function __construct(
         AuthHelper $authHelper,
         RedirectHelper $redirectHelper,

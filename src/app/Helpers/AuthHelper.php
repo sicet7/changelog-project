@@ -2,7 +2,7 @@
 
 namespace App\Helpers;
 
-use App\Controllers\LoginController;
+use App\Controllers\AuthController;
 use App\Data\Token;
 use GuzzleHttp\Client;
 use Psr\Container\ContainerInterface;
@@ -21,6 +21,10 @@ class AuthHelper
     public const TOKEN_PATH = '/oauth2/v2.0/token';
     public const INFO_PATH = '/common/v2.0/.well-known/openid-configuration';
     public const USER_INFO_PATH = 'https://graph.microsoft.com/oidc/userinfo';
+
+    private const ACCESS_TOKEN_SESSION_KEY = 'access_token';
+    private const ID_TOKEN_SESSION_KEY = 'id_token';
+    private const STATE_TOKEN_SESSION_KEY = 'state';
 
     /**
      * @var Base64Helper
@@ -95,7 +99,7 @@ class AuthHelper
     public function getLoginUrl(): string
     {
         if ($this->loginUrl === null) {
-            $_SESSION['state'] = $state = $this->generateState();
+            $_SESSION[self::STATE_TOKEN_SESSION_KEY] = $state = $this->generateState();
             $this->loginUrl = self::BASE_URL . $this->getTenantId() . self::AUTH_PATH . '?' .
                 'client_id=' . $this->getClientId() . '&' .
                 'response_type=code&' .
@@ -104,6 +108,14 @@ class AuthHelper
                 'state=' . $state;
         }
         return $this->loginUrl;
+    }
+
+    /**
+     * @return string
+     */
+    public function getLogoutUrl(): string
+    {
+        return AuthController::LOGOUT_PATH;
     }
 
     /**
@@ -122,7 +134,7 @@ class AuthHelper
     {
         return (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https://" : "http://") .
             $_SERVER['HTTP_HOST'] .
-            LoginController::REDIRECT_PATH;
+            AuthController::REDIRECT_PATH;
     }
 
     /**
@@ -223,10 +235,10 @@ class AuthHelper
         try {
             $queryParams = $request->getQueryParams();
 
-            if (!isset($_SESSION['state']) ||
+            if (!isset($_SESSION[self::STATE_TOKEN_SESSION_KEY]) ||
                 !isset($queryParams['state']) ||
                 empty($queryParams['state']) ||
-                $queryParams['state'] != $_SESSION['state'] ||
+                $queryParams['state'] != $_SESSION[self::STATE_TOKEN_SESSION_KEY] ||
                 !isset($queryParams['code']) ||
                 !is_string($queryParams['code'])
             ) {
@@ -275,13 +287,25 @@ class AuthHelper
             if ($this->token === null) {
                 $this->token = new Token($jsonData['access_token'], $jwt);
             }
-            $_SESSION['access_token'] = $jsonData['access_token'];
-            $_SESSION['id_token'] = $jsonData['id_token'];
+            $_SESSION[self::ACCESS_TOKEN_SESSION_KEY] = $jsonData['access_token'];
+            $_SESSION[self::ID_TOKEN_SESSION_KEY] = $jsonData['id_token'];
             return true;
         } catch (\Exception | \Throwable $exception) {
             $this->logger->error($exception);
             return false;
         }
+    }
+
+    public function logout()
+    {
+        if (isset($_SESSION[self::ID_TOKEN_SESSION_KEY])) {
+            unset($_SESSION[self::ID_TOKEN_SESSION_KEY]);
+        }
+        if (isset($_SESSION[self::ACCESS_TOKEN_SESSION_KEY])) {
+            unset($_SESSION[self::ACCESS_TOKEN_SESSION_KEY]);
+        }
+        $this->token = null;
+        return true;
     }
 
     /**
@@ -290,10 +314,10 @@ class AuthHelper
     public function isAuthenticated(): bool
     {
         try {
-            if (!isset($_SESSION['access_token']) ||
-                !is_string($_SESSION['access_token']) ||
-                !isset($_SESSION['id_token']) ||
-                !is_string($_SESSION['id_token'])
+            if (!isset($_SESSION[self::ACCESS_TOKEN_SESSION_KEY]) ||
+                !is_string($_SESSION[self::ACCESS_TOKEN_SESSION_KEY]) ||
+                !isset($_SESSION[self::ID_TOKEN_SESSION_KEY]) ||
+                !is_string($_SESSION[self::ID_TOKEN_SESSION_KEY])
             ) {
                 return false;
             }
@@ -303,9 +327,15 @@ class AuthHelper
                 return false;
             }
 
-            $jwt = JWT::decode($_SESSION['id_token'], $keySet, self::EXPECTED_ALG);
+            $jwt = JWT::decode($_SESSION[self::ID_TOKEN_SESSION_KEY], $keySet, self::EXPECTED_ALG);
+
+            if (!array_key_exists('email', $jwt->getClaims())) {
+                $this->logger->error('Missing "email" Claim on ID Token.');
+                return false;
+            }
+
             if ($this->token === null) {
-                $this->token = new Token($_SESSION['access_token'], $jwt);
+                $this->token = new Token($_SESSION[self::ACCESS_TOKEN_SESSION_KEY], $jwt);
             }
             return true;
         } catch (\Exception $exception) {

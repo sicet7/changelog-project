@@ -10,15 +10,24 @@ class ContextHelper
     private LibHelper $libHelper;
 
     /**
+     * @var AuthHelper
+     */
+    private AuthHelper $authHelper;
+
+    /**
      * ContextHelper constructor.
      * @param LibHelper $libHelper
+     * @param AuthHelper $authHelper
      */
-    public function __construct(LibHelper $libHelper)
-    {
+    public function __construct(
+        LibHelper $libHelper,
+        AuthHelper $authHelper
+    ) {
         $this->libHelper = $libHelper;
+        $this->authHelper = $authHelper;
     }
 
-    public function getLibs(): array
+    protected function getArray(): array
     {
         return [
             'lib' => [
@@ -27,13 +36,20 @@ class ContextHelper
                     'js' => $this->libHelper->getBootstrapJs(),
                     'css' => $this->libHelper->getBootstrapCss(),
                 ]
+            ],
+            'auth' => [
+                'login' => [
+                    'url' => $this->authHelper->getLoginUrl(),
+                ],
+                'logout' => [
+                    'url' => $this->authHelper->getLogoutUrl(),
+                ]
             ]
         ];
     }
 
     public function makeContext(array $context): array
     {
-        return array_replace_recursive($this->getLibs(), $context);
+        return array_replace_recursive($this->getArray(), $context);
     }
-
 }

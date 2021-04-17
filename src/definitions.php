@@ -14,6 +14,7 @@ use Doctrine\Persistence\Mapping\Driver\StaticPHPDriver;
 use GuzzleHttp\Client;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use Slim\Psr7\Factory\ResponseFactory;
 use Twig\Environment;
 use Twig\Loader\FilesystemLoader;
 use Twig\Loader\LoaderInterface;
@@ -30,10 +31,7 @@ return [
     'view.path' => __DIR__ . '/view',
     'cache.path' => __DIR__ . '/cache',
     'vendor.path' => __DIR__ . '/vendor',
-    'database.connection.options' => [
-        'driver' => 'pdo_sqlite',
-        'path' => __DIR__ .'/database.db'
-    ],
+    'database.connection.url' => env('DATABASE_URL'),
     'database.entity.paths' => [
         __DIR__ . '/app/Database/Entities',
     ],
@@ -102,7 +100,11 @@ return [
             get(CacheHelper::class),
             get(LoggerInterface::class)
         ),
-    //AuthMiddleware::class => create(AuthMiddleware::class),
+    AuthMiddleware::class => create(AuthMiddleware::class)->constructor(
+        get(AuthHelper::class),
+        get(RedirectHelper::class),
+        get(ResponseFactory::class)
+    ),
     MappingDriver::class => function (ContainerInterface $container) {
         return new StaticPHPDriver($container->get('database.entity.paths'));
     },
@@ -127,6 +129,8 @@ return [
         return $config;
     },
     EntityManager::class => function(ContainerInterface $container, Configuration $configuration) {
-        return EntityManager::create($container->get('database.connection.options'), $configuration);
+        return EntityManager::create([
+            'url' => $container->get('database.connection.url'),
+        ], $configuration);
     },
 ];

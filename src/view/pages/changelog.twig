@@ -1,0 +1,101 @@
+{% extends 'bootstrap.twig' %}
+{% block head %}
+    {{ parent() }}
+    <style>
+        body {
+            min-height: 100vh;
+        }
+        .overflow-y-scroll {
+            overflow-y: auto;
+        }
+        tr[data-clickable]:hover th, tr[data-clickable]:hover td {
+            background-color: var(--light);
+            cursor: pointer;
+        }
+    </style>
+{% endblock %}
+{% block container_class %}{{ parent() }} h-100{% endblock %}
+{% block container %}
+    <div class="row h-100">
+        <div class="col-3 px-0 h-100">
+            <div class="list-group list-group-flush bg-light h-100 overflow-y-scroll">
+                <div class="list-group-item bg-transparent">
+                    <form class="form-inline w-100">
+                        <input class="form-control w-100" type="search" placeholder="Search" aria-label="Search">
+                    </form>
+                </div>
+                <div class="list-group-item bg-transparent">
+                    <form class="form-inline w-100">
+                        <button class="btn btn-outline-success" type="button">New Changelog</button>
+                    </form>
+                </div>
+                <a href="#" class="list-group-item list-group-item-action bg-transparent">Dashboard</a>
+                <a href="#" class="list-group-item list-group-item-action bg-transparent">Shortcuts</a>
+                <a href="#" class="list-group-item list-group-item-action bg-transparent">Overview</a>
+                <a href="#" class="list-group-item list-group-item-action bg-transparent">Events</a>
+                <a href="#" class="list-group-item list-group-item-action bg-transparent">Profile</a>
+                <a href="#" class="list-group-item list-group-item-action bg-transparent">Status</a>
+                <a href="#" class="list-group-item list-group-item-action bg-transparent">Dashboard</a>
+                <a href="#" class="list-group-item list-group-item-action bg-transparent">Shortcuts</a>
+                <a href="#" class="list-group-item list-group-item-action bg-transparent">Overview</a>
+                <a href="#" class="list-group-item list-group-item-action bg-transparent">Events</a>
+                <a href="#" class="list-group-item list-group-item-action bg-transparent">Profile</a>
+                <a href="#" class="list-group-item list-group-item-action bg-transparent">Status</a>
+                <a href="#" class="list-group-item list-group-item-action bg-transparent">Dashboard</a>
+                <a href="#" class="list-group-item list-group-item-action bg-transparent">Shortcuts</a>
+                <a href="#" class="list-group-item list-group-item-action bg-transparent">Overview</a>
+                <a href="#" class="list-group-item list-group-item-action bg-transparent">Events</a>
+                <a href="#" class="list-group-item list-group-item-action bg-transparent">Profile</a>
+                <a href="#" class="list-group-item list-group-item-action bg-transparent">Status</a>
+                <a href="#" class="list-group-item list-group-item-action bg-transparent">Status</a>
+                <a href="#" class="list-group-item list-group-item-action bg-transparent">Dashboard</a>
+                <a href="#" class="list-group-item list-group-item-action bg-transparent">Shortcuts</a>
+                <a href="#" class="list-group-item list-group-item-action bg-transparent">Overview</a>
+                <a href="#" class="list-group-item list-group-item-action bg-transparent">Events</a>
+                <a href="#" class="list-group-item list-group-item-action bg-transparent">Profile</a>
+                <a href="#" class="list-group-item list-group-item-action bg-transparent">Status</a>
+            </div>
+        </div>
+        <div class="col-9 px-0">
+            <div class="row mx-0">
+                <div class="col-12 px-0">
+                    {% include 'includes/navbar.twig' %}
+                </div>
+            </div>
+            <div class="row mx-0">
+                <div class="col-12 pt-3 pr-3">
+                    <table class="table table-borderless table-hover">
+                        <thead>
+                            <tr>
+                                <th scope="col">#</th>
+                                <th scope="col">First</th>
+                                <th scope="col">Last</th>
+                                <th scope="col">Handle</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr data-clickable="1">
+                                <th scope="row">1</th>
+                                <td>Mark</td>
+                                <td>Otto</td>
+                                <td>@mdo</td>
+                            </tr>
+                            <tr data-clickable="2">
+                                <th scope="row">2</th>
+                                <td>Jacob</td>
+                                <td>Thornton</td>
+                                <td>@fat</td>
+                            </tr>
+                            <tr data-clickable="3">
+                                <th scope="row">3</th>
+                                <td>Larry</td>
+                                <td>the Bird</td>
+                                <td>@twitter</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -6,7 +6,7 @@
     <script type="text/javascript">{{ lib.bootstrap.js | raw }}</script>
 {% endblock %}
 {% block body %}
-    <div class="container-fluid">
+    <div class="{% block container_class %}container-fluid{% endblock %}">
         {% block container %}
         {% endblock %}
     </div>

@@ -3,3 +3,4 @@ src/vendor
 src/cache
 .env
 src/var
+database
