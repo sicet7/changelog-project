@@ -192,7 +192,7 @@ class AuthHelper
     /**
      * @return mixed
      */
-    protected function getInfoRequestData(): mixed
+    protected function getInfoRequestData()
     {
         try {
             $key = self::INFO_PATH . date('y-m-d');
@@ -342,5 +342,13 @@ class AuthHelper
             $this->logger->error($exception);
             return false;
         }
+    }
+
+    /**
+     * @return Token|null
+     */
+    public function getToken(): ?Token
+    {
+        return $this->token;
     }
 }

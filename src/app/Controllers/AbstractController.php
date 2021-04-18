@@ -9,7 +9,7 @@ use Twig\Environment;
 
 abstract class AbstractController
 {
-    public const TEMPLATE = 'error.twig';
+    protected string $template = 'error.twig';
 
     /**
      * @var Environment
@@ -43,7 +43,7 @@ abstract class AbstractController
 
     public function render(array $context = [])
     {
-        return $this->twig->render(static::TEMPLATE, $this->contextHelper->makeContext($context));
+        return $this->twig->render($this->template, $this->contextHelper->makeContext($context));
     }
 
     /**

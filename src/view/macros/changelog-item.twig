@@ -1,0 +1,5 @@
+{% macro make(link, title, value='empty', active=false) %}
+    <a href="{{ link }}"
+       data-search-value="{{ value }}"
+       class="list-group-item list-group-item-action bg-transparent{% if active %} selected{% endif %}">{{ title }}</a>
+{% endmacro %}

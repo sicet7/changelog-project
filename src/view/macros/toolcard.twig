@@ -1,0 +1,10 @@
+{% macro make(link, icon, title) %}
+    <a href="{{ link }}" class="card text-body text-decoration-none">
+        <div class="col-12 text-center pt-3">
+            <i class="fa fa-book fa-5x" aria-hidden="true"></i>
+        </div>
+        <div class="card-body text-center">
+            <h5 class="card-title">{{ title }}</h5>
+        </div>
+    </a>
+{% endmacro %}

@@ -14,7 +14,6 @@ class AuthController extends AbstractController
 {
     public const REDIRECT_PATH = '/auth/redirect';
     public const LOGOUT_PATH = '/auth/logout';
-    public const TEMPLATE = 'pages/login.twig';
 
     /**
      * @var AuthHelper
@@ -38,8 +37,14 @@ class AuthController extends AbstractController
         $this->redirectHelper = $redirectHelper;
     }
 
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @return Response
+     */
     public function get(Request $request, Response $response)
     {
+        $this->template = 'pages/login.twig';
         if ($this->authHelper->isAuthenticated()) {
             return $this->redirectHelper->tmp($response, '/');
         }
@@ -50,6 +55,11 @@ class AuthController extends AbstractController
         ]);
     }
 
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @return Response
+     */
     public function redirect(Request $request, Response $response)
     {
         if ($this->authHelper->authenticate($request)) {
@@ -58,6 +68,11 @@ class AuthController extends AbstractController
         return $this->redirectHelper->tmp($response, '/login');
     }
 
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @return Response
+     */
     public function logout(Request $request, Response $response)
     {
         $this->authHelper->logout();

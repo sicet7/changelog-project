@@ -1,101 +1,165 @@
 {% extends 'bootstrap.twig' %}
+{% import 'macros/changelog-item.twig' as logitem %}
+
 {% block head %}
     {{ parent() }}
+    <script type="text/javascript" src="/js/changelog.js"></script>
     <style>
         body {
             min-height: 100vh;
         }
-        .overflow-y-scroll {
-            overflow-y: auto;
-        }
         tr[data-clickable]:hover th, tr[data-clickable]:hover td {
-            background-color: var(--light);
+            background-color: rgba(0,0,0,0.03) !important;
             cursor: pointer;
+        }
+        #changelog-list {
+            min-height: 100vh;
+        }
+        #changelog-list a[data-search-value]:hover, .selected {
+            background-color: rgba(0,0,0,0.05) !important;
+        }
+        #right-dropdown [aria-labelledby="navbarDropdown"] {
+            left: unset;
+            right: 0;
         }
     </style>
 {% endblock %}
+
 {% block container_class %}{{ parent() }} h-100{% endblock %}
+
 {% block container %}
     <div class="row h-100">
         <div class="col-3 px-0 h-100">
-            <div class="list-group list-group-flush bg-light h-100 overflow-y-scroll">
+            <div class="list-group list-group-flush bg-light h-100 border-right" id="changelog-list">
                 <div class="list-group-item bg-transparent">
-                    <form class="form-inline w-100">
-                        <input class="form-control w-100" type="search" placeholder="Search" aria-label="Search">
-                    </form>
+                    <input class="form-control w-100"
+                           type="search"
+                           id="search-input"
+                           placeholder="Search"
+                           aria-label="Search">
+                    <script type="text/javascript">
+                        bootSearch(
+                            document.getElementById('search-input'),
+                            '#changelog-list [data-search-value]',
+                            'data-search-value',
+                            'none',
+                            'block'
+                        );
+                    </script>
                 </div>
                 <div class="list-group-item bg-transparent">
-                    <form class="form-inline w-100">
-                        <button class="btn btn-outline-success" type="button">New Changelog</button>
-                    </form>
+                    <a class="btn btn-outline-success" href="/changelogs/create">New Changelog</a>
                 </div>
-                <a href="#" class="list-group-item list-group-item-action bg-transparent">Dashboard</a>
-                <a href="#" class="list-group-item list-group-item-action bg-transparent">Shortcuts</a>
-                <a href="#" class="list-group-item list-group-item-action bg-transparent">Overview</a>
-                <a href="#" class="list-group-item list-group-item-action bg-transparent">Events</a>
-                <a href="#" class="list-group-item list-group-item-action bg-transparent">Profile</a>
-                <a href="#" class="list-group-item list-group-item-action bg-transparent">Status</a>
-                <a href="#" class="list-group-item list-group-item-action bg-transparent">Dashboard</a>
-                <a href="#" class="list-group-item list-group-item-action bg-transparent">Shortcuts</a>
-                <a href="#" class="list-group-item list-group-item-action bg-transparent">Overview</a>
-                <a href="#" class="list-group-item list-group-item-action bg-transparent">Events</a>
-                <a href="#" class="list-group-item list-group-item-action bg-transparent">Profile</a>
-                <a href="#" class="list-group-item list-group-item-action bg-transparent">Status</a>
-                <a href="#" class="list-group-item list-group-item-action bg-transparent">Dashboard</a>
-                <a href="#" class="list-group-item list-group-item-action bg-transparent">Shortcuts</a>
-                <a href="#" class="list-group-item list-group-item-action bg-transparent">Overview</a>
-                <a href="#" class="list-group-item list-group-item-action bg-transparent">Events</a>
-                <a href="#" class="list-group-item list-group-item-action bg-transparent">Profile</a>
-                <a href="#" class="list-group-item list-group-item-action bg-transparent">Status</a>
-                <a href="#" class="list-group-item list-group-item-action bg-transparent">Status</a>
-                <a href="#" class="list-group-item list-group-item-action bg-transparent">Dashboard</a>
-                <a href="#" class="list-group-item list-group-item-action bg-transparent">Shortcuts</a>
-                <a href="#" class="list-group-item list-group-item-action bg-transparent">Overview</a>
-                <a href="#" class="list-group-item list-group-item-action bg-transparent">Events</a>
-                <a href="#" class="list-group-item list-group-item-action bg-transparent">Profile</a>
-                <a href="#" class="list-group-item list-group-item-action bg-transparent">Status</a>
+                {% for item in logs %}
+                    {% if selected is defined and selected.id == item.id %}
+                        {{ logitem.make(item.link, item.name, item.name, true) }}
+                    {% else %}
+                        {{ logitem.make(item.link, item.name, item.name, false) }}
+                    {% endif %}
+                {% endfor %}
             </div>
         </div>
         <div class="col-9 px-0">
             <div class="row mx-0">
                 <div class="col-12 px-0">
-                    {% include 'includes/navbar.twig' %}
+                    {% embed 'includes/navbar.twig' %}
+                        {% block brand %}
+                            {% if selected.edit_mode is defined %}
+                                <input class="form-control w-25"
+                                       type="text"
+                                       id="edit-name"
+                                       placeholder="Name"
+                                       value="{{ selected.name }}">
+                                <button type="button"
+                                        class="btn btn-success ml-3"
+                                        onclick="saveEdit('{{ selected.id }}','/changelogs/{{ selected.id }}');">Save</button>
+                            {% else %}
+                                {{ parent() }}
+                                {% if selected.edit_link is defined %}
+                                    <a href="{{ selected.edit_link }}" class="btn btn-link">Edit</a>
+                                {% endif %}
+                            {% endif %}
+                        {% endblock %}
+                        {% block menu %}
+                            <li class="nav-item dropdown" id="right-dropdown">
+                                <a class="nav-link dropdown-toggle"
+                                   href="#"
+                                   id="navbarDropdown"
+                                   role="button"
+                                   data-toggle="dropdown"
+                                   aria-haspopup="true"
+                                   aria-expanded="false">{{ auth.claims.email|default('Unknown') }}</a>
+                                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                    <a class="dropdown-item" href="/">Go to Toolbox</a>
+                                    <div class="dropdown-divider"></div>
+                                    <a class="dropdown-item"
+                                       href="{{ auth.logout.url|default('#') }}">Log out <i class="fa fa-sign-out" aria-hidden="true"></i></a>
+                                </div>
+                            </li>
+                        {% endblock %}
+                    {% endembed %}
                 </div>
             </div>
-            <div class="row mx-0">
-                <div class="col-12 pt-3 pr-3">
-                    <table class="table table-borderless table-hover">
-                        <thead>
-                            <tr>
-                                <th scope="col">#</th>
-                                <th scope="col">First</th>
-                                <th scope="col">Last</th>
-                                <th scope="col">Handle</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr data-clickable="1">
-                                <th scope="row">1</th>
-                                <td>Mark</td>
-                                <td>Otto</td>
-                                <td>@mdo</td>
-                            </tr>
-                            <tr data-clickable="2">
-                                <th scope="row">2</th>
-                                <td>Jacob</td>
-                                <td>Thornton</td>
-                                <td>@fat</td>
-                            </tr>
-                            <tr data-clickable="3">
-                                <th scope="row">3</th>
-                                <td>Larry</td>
-                                <td>the Bird</td>
-                                <td>@twitter</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+            {% block changelogContent %}
+                {% if selected is defined %}
+                    {% if selected.markdown is defined %}
+                        <div class="row m-0 border-bottom">
+                            <div class="col-11 py-3">{{ selected.markdown|raw }}</div>
+                            {% if selected.delete_link is defined %}
+                                <div class="col-1 py-3 text-center">
+                                    <button type="button"
+                                            onclick="deleteChangelog('{{ selected.delete_link }}', '{{ selected.name }}')"
+                                            class="btn btn-danger">Delete</button>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                    {% if selected.description is defined %}
+                        <div class="row m-0 border-bottom">
+                            <div class="col-12 py-3">
+                                <textarea class="form-control"
+                                          id="edit-description"
+                                          name="description"
+                                          placeholder="description (Markdown support)">{{ selected.description|raw }}</textarea>
+                            </div>
+                        </div>
+                    {% endif %}
+                    <div class="row mx-0">
+                        <div class="col-12 pt-3 pr-3">
+                            <table class="table table-borderless table-hover">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">#</th>
+                                        <th scope="col">First</th>
+                                        <th scope="col">Last</th>
+                                        <th scope="col">Handle</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr data-clickable="1">
+                                        <th scope="row">1</th>
+                                        <td>Mark</td>
+                                        <td>Otto</td>
+                                        <td>@mdo</td>
+                                    </tr>
+                                    <tr data-clickable="2">
+                                        <th scope="row">2</th>
+                                        <td>Jacob</td>
+                                        <td>Thornton</td>
+                                        <td>@fat</td>
+                                    </tr>
+                                    <tr data-clickable="3">
+                                        <th scope="row">3</th>
+                                        <td>Larry</td>
+                                        <td>the Bird</td>
+                                        <td>@twitter</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                {% endif %}
+            {% endblock %}
         </div>
     </div>
 {% endblock %}

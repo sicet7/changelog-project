@@ -67,7 +67,7 @@ class CacheHelper
      * @param bool $decompress
      * @return mixed
      */
-    public function read(string $key, bool $decompress = true): mixed
+    public function read(string $key, bool $decompress = true)
     {
         if (!$this->contains($key)) {
             return false;

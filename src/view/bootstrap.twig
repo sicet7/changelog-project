@@ -1,9 +1,12 @@
 {% extends 'base.twig' %}
 {% block head %}
     {{ parent() }}
-    <script type="text/javascript">{{ lib.jquery | raw }}</script>
-    <style type="text/css">{{ lib.bootstrap.css | raw }}</style>
-    <script type="text/javascript">{{ lib.bootstrap.js | raw }}</script>
+    <script type="text/javascript" src="{{ lib.jquery }}"></script>
+    <script type="text/javascript" src="{{ lib.bootstrap.js }}"></script>
+    <script type="text/javascript" src="{{ lib.sweetalert2.js }}"></script>
+    <link rel="stylesheet" type="text/css" href="{{ lib.bootstrap.css }}"/>
+    <link rel="stylesheet" type="text/css" href="{{ lib.fontawesome }}"/>
+    <link rel="stylesheet" type="text/css" href="{{ lib.sweetalert2.css }}"/>
 {% endblock %}
 {% block body %}
     <div class="{% block container_class %}container-fluid{% endblock %}">

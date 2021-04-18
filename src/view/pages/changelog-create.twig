@@ -1,0 +1,36 @@
+{% extends 'pages/changelog.twig' %}
+{% block changelogContent %}
+    <div class="row m-0 pt-3 h-100">
+        <div class="col-12">
+            {% if msg.error is defined %}
+                <div class="alert alert-danger" role="alert">{{ msg.error }}</div>
+            {% endif %}
+            {% if msg.success is defined %}
+                <div class="alert alert-success" role="alert">{{ msg.success }}</div>
+            {% endif %}
+            <form class="h-100" action="/changelogs/save" method="POST" enctype="multipart/form-data">
+                <div class="form-group">
+                    <button type="submit" class="btn btn-success">Save</button>
+                </div>
+                <input type="hidden" name="id" value="{{ entity.log.id }}"/>
+                <div class="form-group">
+                    <label for="name">Name</label>
+                    <input type="text"
+                           class="form-control"
+                           id="name"
+                           name="name"
+                           placeholder="name"
+                           value="{{ entity.log.name }}">
+                </div>
+                <div class="form-group h-100">
+                    <label for="description">Description</label>
+                    <textarea class="form-control h-100"
+                              id="description"
+                              rows="3"
+                              name="description"
+                              placeholder="description (Markdown support)">{{ entity.log.description }}</textarea>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}

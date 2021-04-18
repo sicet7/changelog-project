@@ -1,9 +1,9 @@
 <?php
 
+use App\Database\Repositories\LogRepository;
 use App\Helpers\AuthHelper;
 use App\Helpers\Base64Helper;
 use App\Helpers\CacheHelper;
-use App\Helpers\LibHelper;
 use App\Helpers\LogHelper;
 use App\Helpers\RedirectHelper;
 use App\Middleware\AuthMiddleware;
@@ -12,6 +12,7 @@ use Doctrine\ORM\EntityManager;
 use Doctrine\Persistence\Mapping\Driver\MappingDriver;
 use Doctrine\Persistence\Mapping\Driver\StaticPHPDriver;
 use GuzzleHttp\Client;
+use League\CommonMark\CommonMarkConverter;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Slim\Psr7\Factory\ResponseFactory;
@@ -31,9 +32,26 @@ return [
     'view.path' => __DIR__ . '/view',
     'cache.path' => __DIR__ . '/cache',
     'vendor.path' => __DIR__ . '/vendor',
+    'http.libs' => [
+        'jquery' => '/js/jquery.min.js',
+        'bootstrap' => [
+            'js' => '/js/bootstrap.bundle.min.js',
+            'css' => '/css/bootstrap.min.css',
+        ],
+        'fontawesome' => '/css/font-awesome.min.css',
+        'sweetalert2' => [
+            'js' => '/js/sweetalert2.min.js',
+            'css' => '/css/sweetalert2.min.css',
+        ],
+    ],
+    'markdown.options' => [
+        'html_input' => 'allow',
+        'allow_unsafe_links' => true,
+        'max_nesting_level' => INF,
+    ],
     'database.connection.url' => env('DATABASE_URL'),
     'database.entity.paths' => [
-        __DIR__ . '/app/Database/Entities',
+        __DIR__ . '/app/Database/Entities/',
     ],
     'database.proxies.dir' => __DIR__ . '/app/Database/Proxies',
     'database.proxies.namespace' => 'App\Database\Proxies',
@@ -86,13 +104,6 @@ return [
             get(ContainerInterface::class),
             get(Base64Helper::class)
         ),
-    LibHelper::class => create(LibHelper::class)
-        ->constructor(
-            get(Client::class),
-            get(LoggerInterface::class),
-            get(ContainerInterface::class),
-            get(CacheHelper::class)
-        ),
     AuthHelper::class => create(AuthHelper::class)
         ->constructor(
             get(Base64Helper::class),
@@ -133,4 +144,8 @@ return [
             'url' => $container->get('database.connection.url'),
         ], $configuration);
     },
+    LogRepository::class => create(LogRepository::class)
+        ->constructor(get(EntityManager::class)),
+    CommonMarkConverter::class => create(CommonMarkConverter::class)
+        ->constructor(get('markdown.options')),
 ];
