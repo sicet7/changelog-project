@@ -7,6 +7,7 @@ use App\Helpers\CacheHelper;
 use App\Helpers\LogHelper;
 use App\Helpers\RedirectHelper;
 use App\Middleware\AuthMiddleware;
+use App\Twig\FilterContainer;
 use Doctrine\ORM\Configuration;
 use Doctrine\ORM\EntityManager;
 use Doctrine\Persistence\Mapping\Driver\MappingDriver;
@@ -33,15 +34,19 @@ return [
     'cache.path' => __DIR__ . '/cache',
     'vendor.path' => __DIR__ . '/vendor',
     'http.libs' => [
-        'jquery' => '/js/jquery.min.js',
-        'bootstrap' => [
-            'js' => '/js/bootstrap.bundle.min.js',
-            'css' => '/css/bootstrap.min.css',
+        'js' => [
+            '/js/jquery.min.js',
+            '/js/jquery-ui.min.js',
+            '/js/bootstrap.bundle.min.js',
+            '/js/sweetalert2.min.js',
         ],
-        'fontawesome' => '/css/font-awesome.min.css',
-        'sweetalert2' => [
-            'js' => '/js/sweetalert2.min.js',
-            'css' => '/css/sweetalert2.min.css',
+        'css' => [
+            '/css/jquery-ui.min.css',
+            '/css/jquery-ui.structure.min.css',
+            '/css/jquery-ui.theme.min.css',
+            '/css/bootstrap.min.css',
+            '/css/font-awesome.min.css',
+            '/css/sweetalert2.min.css',
         ],
     ],
     'markdown.options' => [
@@ -77,7 +82,11 @@ return [
     LoaderInterface::class => function(ContainerInterface $container) {
         return new FilesystemLoader($container->get('view.path'));
     },
-    Environment::class => function (LoaderInterface $loader, ContainerInterface $container) {
+    Environment::class => function (
+        LoaderInterface $loader,
+        ContainerInterface $container,
+        FilterContainer $filterContainer
+    ) {
 
         $cachePath = $container->get('cache.path');
 
@@ -92,13 +101,20 @@ return [
             $options = [];
         }
 
-        return new Environment($loader, $options);
+        $env = new Environment($loader, $options);
+        foreach ($filterContainer->getMap() as $filter) {
+            $env->addFilter($filter);
+        }
+        return $env;
     },
+    FilterContainer::class => create(FilterContainer::class)
+        ->constructor(get(ContainerInterface::class)),
     Client::class => create(Client::class),
     LoggerInterface::class => create(LogHelper::class)
         ->constructor(get(ContainerInterface::class)),
     Base64Helper::class => create(Base64Helper::class),
-    RedirectHelper::class => create(RedirectHelper::class),
+    RedirectHelper::class => create(RedirectHelper::class)
+        ->constructor(get(ResponseFactory::class)),
     CacheHelper::class => create(CacheHelper::class)
         ->constructor(
             get(ContainerInterface::class),
@@ -113,8 +129,7 @@ return [
         ),
     AuthMiddleware::class => create(AuthMiddleware::class)->constructor(
         get(AuthHelper::class),
-        get(RedirectHelper::class),
-        get(ResponseFactory::class)
+        get(RedirectHelper::class)
     ),
     MappingDriver::class => function (ContainerInterface $container) {
         return new StaticPHPDriver($container->get('database.entity.paths'));

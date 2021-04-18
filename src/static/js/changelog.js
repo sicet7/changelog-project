@@ -43,9 +43,6 @@ function saveEdit(id, newLocation)
     $.ajax({
         url: "/changelogs/save",
         method: "POST",
-        headers: {
-            "Custom-IsAjax": "true"
-        },
         data: {
             id: id,
             name: document.getElementById('edit-name').value,
@@ -55,11 +52,11 @@ function saveEdit(id, newLocation)
             window.location = newLocation;
             return;
         },
-        error: function() {
+        error: function(res) {
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                text: 'Failed to save changes!',
+                text: res.responseText,
             })
         }
     })

@@ -3,12 +3,12 @@
 namespace App\Controllers;
 
 use App\Database\Entities\Log;
-use App\Database\Entities\LogEntry;
 use App\Database\Repositories\LogRepository;
 use App\Exceptions\NoSuchEntityException;
 use App\Helpers\ContextHelper;
 use App\Helpers\MessageHelper;
 use App\Helpers\RedirectHelper;
+use App\Helpers\ResourceHelper;
 use League\CommonMark\CommonMarkConverter;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -39,6 +39,16 @@ class ChangeLogController extends AbstractController
      */
     private CommonMarkConverter $converter;
 
+    /**
+     * @var ResponseFactory
+     */
+    private ResponseFactory $responseFactory;
+
+    /**
+     * @var ResourceHelper
+     */
+    private ResourceHelper $resourceHelper;
+
     public function __construct(
         Environment $twig,
         ContextHelper $contextHelper,
@@ -46,81 +56,79 @@ class ChangeLogController extends AbstractController
         MessageHelper $messageHelper,
         LogRepository $logRepository,
         RedirectHelper $redirectHelper,
-        CommonMarkConverter $converter
+        CommonMarkConverter $converter,
+        ResourceHelper $resourceHelper
     ) {
         parent::__construct($twig, $contextHelper, $responseFactory);
         $this->messageHelper = $messageHelper;
         $this->logRepository = $logRepository;
         $this->redirectHelper = $redirectHelper;
         $this->converter = $converter;
+        $this->responseFactory = $responseFactory;
+        $this->resourceHelper = $resourceHelper;
     }
 
     /**
-     * @return array[]
+     * @param Request $request
+     * @return bool
      */
-    protected function getLogs()
+    protected function isAjaxRequest(Request $request): bool
     {
-        return array_map(function(Log $log) {
-            return [
-                'id' => $log->getId(),
-                'name' => $log->getName(),
-                'link' => '/changelogs/' . $log->getId()
-            ];
-        }, $this->logRepository->getAllLogs());
+        return $request->hasHeader('X-Requested-With') && (
+            (
+                is_string($request->getHeader('X-Requested-With')) &&
+                strtolower($request->getHeader('X-Requested-With')) == 'xmlhttprequest'
+            ) || (
+                is_array($request->getHeader('X-Requested-With')) &&
+                in_array('xmlhttprequest', array_map('strtolower', $request->getHeader('X-Requested-With')))
+            )
+        );
     }
 
     /**
      * @param string|null $id
      * @return Response
      */
-    public function get(Response $response, string $id = null)
+    public function get(string $id = null)
     {
         try {
             $this->template = 'pages/changelog.twig';
+            $this->resourceHelper->setLoadLogs(true);
             $context = [
                 'page' => [
                     'title' => 'ChangeLogs'
                 ],
                 'navbar' => [],
-                'logs' => $this->getLogs(),
-                'msg' => [],
             ];
             if (!empty($id) && Uuid::isValid($id)) {
                 $entity = $this->logRepository->getById($id);
-                $context['selected'] = [
-                    'id' => $entity->getId(),
-                    'name' => $entity->getName(),
-                    'edit_link' => '/changelogs/' . $entity->getId() . '/edit',
-                    'delete_link' => '/changelogs/' . $entity->getId() . '/delete',
-                    'entries' => [], // TODO: load entries here + filters
-                ];
+                $this->resourceHelper->setSelected($entity);
                 $context['navbar']['title'] = $entity->getName();
                 $context['page']['title'] .= ' | ' . $entity->getName();
-                if (!empty($entity->getDescription())) {
-                    $context['selected']['markdown'] = $this->converter->convertToHtml($entity->getDescription());
-                }
             }
             return $this->renderResponse($context);
         } catch (NoSuchEntityException $exception) {
             $this->messageHelper->addMessage('error', $exception->getMessage());
-            return $this->redirectHelper->tmp($response, '/changelogs');
+            return $this->redirectHelper->tmp('/changelogs');
         }
     }
 
     /**
-     * @param Response $response
      * @param string $id
      * @return Response
      */
-    public function edit(Response $response, string $id)
+    public function edit(string $id)
     {
         try {
             if (empty($id) || !Uuid::isValid($id)) {
                 $this->messageHelper->addMessage('error', 'Invalid Id.');
-                return $this->redirectHelper->tmp($response, '/changelogs');
+                return $this->redirectHelper->tmp('/changelogs');
             }
             $this->template = 'pages/changelog.twig';
             $entity = $this->logRepository->getById($id);
+            $this->resourceHelper->setSelected($entity);
+            $this->resourceHelper->setLoadLogs(true);
+            $this->resourceHelper->setEditMode(true);
             $context = [
                 'page' => [
                     'title' => 'ChangeLogs | Edit | ' . $entity->getName(),
@@ -128,22 +136,11 @@ class ChangeLogController extends AbstractController
                 'navbar' => [
                     'title' => $entity->getName(),
                 ],
-                'logs' => $this->getLogs(),
-                'msg' => [],
-                'selected' => [
-                    'id' => $entity->getId(),
-                    'name' => $entity->getName(),
-                    'edit_mode' => true,
-                    'entries' => [], // TODO: load entries here + filters
-                ],
             ];
-            if (!empty($entity->getDescription())) {
-                $context['selected']['description'] = $entity->getDescription();
-            }
             return $this->renderResponse($context);
         } catch (NoSuchEntityException $exception) {
             $this->messageHelper->addMessage('error', $exception->getMessage());
-            return $this->redirectHelper->tmp($response, '/changelogs');
+            return $this->redirectHelper->tmp('/changelogs');
         }
     }
 
@@ -152,6 +149,7 @@ class ChangeLogController extends AbstractController
      */
     public function create()
     {
+        $this->resourceHelper->setLoadLogs(true);
         $context = [
             'navbar' => [],
             'entity' => [
@@ -162,26 +160,15 @@ class ChangeLogController extends AbstractController
                 ]
             ],
             'msg' => [],
-            'logs' => $this->getLogs(),
         ];
-
-        $message = null;
-        if ($this->messageHelper->hasMessage('error')) {
-            $context['msg']['error'] = $this->messageHelper->getMessage('error');
-        }
-        if ($this->messageHelper->hasMessage('success')) {
-            $context['msg']['success'] = $this->messageHelper->getMessage('success');
-        }
-        $this->messageHelper->reset();
         $this->template = 'pages/changelog-create.twig';;
         return $this->renderResponse($context);
     }
 
     /**
-     * @param Response $response
      * @param string $id
      */
-    public function delete(Response $response, string $id)
+    public function delete(string $id)
     {
         try {
             $entity = $this->logRepository->getById($id);
@@ -193,7 +180,7 @@ class ChangeLogController extends AbstractController
         } catch (\Exception $exception) {
             $this->messageHelper->addMessage('error', $exception->getMessage());
         }
-        return $this->redirectHelper->tmp($response, '/changelogs');
+        return $this->redirectHelper->tmp('/changelogs');
     }
 
     /**
@@ -203,6 +190,8 @@ class ChangeLogController extends AbstractController
      */
     public function save(Request $request, Response $response)
     {
+        $existed = false;
+        $isAjax = $this->isAjaxRequest($request);
         try {
             $v = v::arrayType()->keySet(
                 v::key('id', v::stringVal()->notEmpty()->uuid(4)),
@@ -216,17 +205,77 @@ class ChangeLogController extends AbstractController
 
             try {
                 $entity = $this->logRepository->getById($id);
+                $existed = $entity->getId();
             } catch (NoSuchEntityException $exception) {
                 $entity = new Log();
             }
             $entity->setName($name);
             $entity->setDescription($description);
             $this->logRepository->save($entity);
-            $this->messageHelper->addMessage('success', 'Successfully Created new ChangeLog');
-            return $this->redirectHelper->tmp($response, '/changelogs/create');
-        } catch (\Exception $exception) {
+            $text = ($existed === false ? 'Created new' : 'Updated');
+            $this->messageHelper->addMessage('success', 'Successfully ' . $text . ' ChangeLog');
+            if ($isAjax) {
+                $response->getBody()->write('');
+                $response->withStatus(204);
+                return $response;
+            }
+            return $this->redirectHelper->tmp('/changelogs/' . $entity->getId());
+        } catch (\Throwable $exception) {
+            $link = '/changelogs/create';
+            if ($existed) {
+                $link = '/changelogs/' . $existed;
+            }
+            if ($isAjax) {
+                $resp = $this->responseFactory->createResponse(400, $exception->getMessage());
+                $resp->getBody()->write($exception->getMessage());
+                return $resp;
+            }
             $this->messageHelper->addMessage('error', $exception->getMessage());
-            return $this->redirectHelper->tmp($response, '/changelogs/create');
+            return $this->redirectHelper->tmp($link);
         }
+    }
+
+    public function showLogEntry(string $id)
+    {
+        die('Not Implemented Yet!');
+    }
+
+    public function newLogEntry(string $id)
+    {
+        try {
+            $this->template = 'pages/new-log-entry.twig';
+            $this->resourceHelper->setLoadLogs(true);
+            $entity = $this->logRepository->getById($id);
+            $this->resourceHelper->setSelected($entity);
+            $this->resourceHelper->setEntryMode('add');
+            return $this->renderResponse([
+                'page' => [
+                    'title' => 'Changelogs | Add Entry'
+                ],
+                'navbar' => [
+                    'title' => 'Add Entry'
+                ],
+                'new_id' => Uuid::uuid4()->toString(),
+            ]);
+        } catch (\Throwable $throwable) {
+            $this->messageHelper->addMessage('error', $throwable->getMessage());
+            return $this->redirectHelper->tmp('/changelogs');
+        }
+    }
+
+    public function deleteLogEntry(string $id)
+    {
+        die('Not Implemented Yet!');
+    }
+
+    public function editLogEntry(string $id)
+    {
+        die('Not Implemented Yet!');
+    }
+
+    public function saveLogEntry(Request $request)
+    {
+        var_dump($request->getParsedBody());
+        die;
     }
 }

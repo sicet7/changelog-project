@@ -48,7 +48,14 @@
                     </script>
                 </div>
                 <div class="list-group-item bg-transparent">
-                    <a class="btn btn-outline-success" href="/changelogs/create">New Changelog</a>
+                    <a class="btn btn-outline-success mr-3"
+                       href="/changelogs/create">New Changelog</a>
+                    {% if selected.new_entry_link is defined and entry_mode is not defined %}
+                        <a class="btn btn-outline-success" href="{{ selected.new_entry_link }}">Add Entry</a>
+                    {% endif %}
+                    {% if entry_mode is defined %}
+                        <a class="btn btn-outline-danger" href="{{ selected.show_link }}">Back</a>
+                    {% endif %}
                 </div>
                 {% for item in logs %}
                     {% if selected is defined and selected.id == item.id %}
@@ -75,7 +82,7 @@
                                         onclick="saveEdit('{{ selected.id }}','/changelogs/{{ selected.id }}');">Save</button>
                             {% else %}
                                 {{ parent() }}
-                                {% if selected.edit_link is defined %}
+                                {% if selected.edit_link is defined and entry_mode is not defined %}
                                     <a href="{{ selected.edit_link }}" class="btn btn-link">Edit</a>
                                 {% endif %}
                             {% endif %}
@@ -101,20 +108,9 @@
                 </div>
             </div>
             {% block changelogContent %}
+                {% include "includes/messages.twig" %}
                 {% if selected is defined %}
-                    {% if selected.markdown is defined %}
-                        <div class="row m-0 border-bottom">
-                            <div class="col-11 py-3">{{ selected.markdown|raw }}</div>
-                            {% if selected.delete_link is defined %}
-                                <div class="col-1 py-3 text-center">
-                                    <button type="button"
-                                            onclick="deleteChangelog('{{ selected.delete_link }}', '{{ selected.name }}')"
-                                            class="btn btn-danger">Delete</button>
-                                </div>
-                            {% endif %}
-                        </div>
-                    {% endif %}
-                    {% if selected.description is defined %}
+                    {% if selected.edit_mode is defined %}
                         <div class="row m-0 border-bottom">
                             <div class="col-12 py-3">
                                 <textarea class="form-control"
@@ -122,6 +118,17 @@
                                           name="description"
                                           placeholder="description (Markdown support)">{{ selected.description|raw }}</textarea>
                             </div>
+                        </div>
+                    {% else %}
+                        <div class="row m-0 border-bottom">
+                            <div class="col-11 py-3">{{ selected.description|markdown }}</div>
+                            {% if selected.delete_link is defined %}
+                                <div class="col-1 py-3 text-center">
+                                    <button type="button"
+                                            onclick="deleteChangelog('{{ selected.delete_link }}', '{{ selected.name }}')"
+                                            class="btn btn-danger">Delete</button>
+                                </div>
+                            {% endif %}
                         </div>
                     {% endif %}
                     <div class="row mx-0">

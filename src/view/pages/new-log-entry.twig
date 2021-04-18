@@ -1,0 +1,106 @@
+{% extends 'pages/changelog.twig' %}
+{% block head %}
+    {{ parent() }}
+    <style type="text/css">
+        .form-group.required label:after {
+            content:" *";
+            color: red;
+        }
+        .never-select {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        .ui-widget-content {
+            background-color: white;
+            border: 1px solid #ced4da;
+            padding: .375rem .75rem;
+        }
+    </style>
+{% endblock %}
+{% block changelogContent %}
+    <div class="row mx-0 my-3">
+        <div class="col-6 mx-auto">
+            <form action="/changelogs/entry/save" method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="id" value="{{ new_id }}"/>
+                <input type="hidden" name="log_id" value="{{ selected.id }}"/>
+                <div class="form-group required">
+                    <label for="initiated_by">Initiated By</label>
+                    <input type="text"
+                           class="form-control"
+                           name="initiated_by"
+                           required="required"
+                           maxlength="200"
+                           id="initiated_by">
+                </div>
+                <div class="form-group required">
+                    <label for="tech">Tech</label>
+                    <input type="email"
+                           class="form-control"
+                           name="tech"
+                           required="required"
+                           value="{{ auth.claims.email }}"
+                           maxlength="200"
+                           id="tech">
+                </div>
+                <div class="form-group required">
+                    <label for="change_description">Change Description</label>
+                    <textarea class="form-control"
+                              name="change_description"
+                              required="required"
+                              id="change_description"
+                              rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="device">Device</label>
+                    <input type="text"
+                           class="form-control"
+                           name="device"
+                           maxlength="200"
+                           id="device">
+                </div>
+                <div class="form-group">
+                    <label for="rollback_description">Rollback Description</label>
+                    <textarea class="form-control"
+                              name="rollback_description"
+                              id="rollback_description"
+                              rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="created_at">Performed</label>
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <div class="input-group-text">
+                                <input class="mr-2" style="margin-top: -1px;" onclick="processNow();" type="checkbox" checked="checked" name="now" value="1" id="now">
+                                <label class="form-check-label never-select" for="now">Now</label>
+                            </div>
+                        </div>
+                        <input type="text" class="form-control" id="created_at" name="created_at" />
+                    </div>
+                </div>
+                <script type="text/javascript">
+                    function processNow()
+                    {
+                        var checkbox = document.getElementById('now');
+                        var input = document.getElementById('created_at');
+                        if (checkbox.checked == true) {
+                            if (!input.hasAttribute('disabled')) {
+                                input.setAttribute('disabled', 'disabled');
+                            }
+                        } else {
+                            if (input.hasAttribute('disabled')) {
+                                input.removeAttribute('disabled');
+                            }
+                        }
+                    }
+                    processNow();
+                    $( "#created_at" ).datepicker({});
+                </script>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </form>
+        </div>
+    </div>
+{% endblock %}

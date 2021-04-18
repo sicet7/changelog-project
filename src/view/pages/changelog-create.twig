@@ -2,12 +2,7 @@
 {% block changelogContent %}
     <div class="row m-0 pt-3 h-100">
         <div class="col-12">
-            {% if msg.error is defined %}
-                <div class="alert alert-danger" role="alert">{{ msg.error }}</div>
-            {% endif %}
-            {% if msg.success is defined %}
-                <div class="alert alert-success" role="alert">{{ msg.success }}</div>
-            {% endif %}
+            {% include "includes/messages.twig" %}
             <form class="h-100" action="/changelogs/save" method="POST" enctype="multipart/form-data">
                 <div class="form-group">
                     <button type="submit" class="btn btn-success">Save</button>

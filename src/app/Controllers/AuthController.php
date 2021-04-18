@@ -38,15 +38,13 @@ class AuthController extends AbstractController
     }
 
     /**
-     * @param Request $request
-     * @param Response $response
      * @return Response
      */
-    public function get(Request $request, Response $response)
+    public function get()
     {
         $this->template = 'pages/login.twig';
         if ($this->authHelper->isAuthenticated()) {
-            return $this->redirectHelper->tmp($response, '/');
+            return $this->redirectHelper->tmp('/');
         }
         return $this->renderResponse([
             'login' => [
@@ -57,25 +55,22 @@ class AuthController extends AbstractController
 
     /**
      * @param Request $request
-     * @param Response $response
      * @return Response
      */
-    public function redirect(Request $request, Response $response)
+    public function redirect(Request $request)
     {
         if ($this->authHelper->authenticate($request)) {
-            return $this->redirectHelper->tmp($response, '/');
+            return $this->redirectHelper->tmp('/');
         }
-        return $this->redirectHelper->tmp($response, '/login');
+        return $this->redirectHelper->tmp('/login');
     }
 
     /**
-     * @param Request $request
-     * @param Response $response
      * @return Response
      */
-    public function logout(Request $request, Response $response)
+    public function logout()
     {
         $this->authHelper->logout();
-        return $this->redirectHelper->tmp($response, '/login');
+        return $this->redirectHelper->tmp('/login');
     }
 }

@@ -3,16 +3,29 @@
 namespace App\Helpers;
 
 use Psr\Http\Message\ResponseInterface as Response;
+use Slim\Psr7\Factory\ResponseFactory;
 
 class RedirectHelper
 {
-    public function tmp(Response $response, string $location): Response
+    /**
+     * @var ResponseFactory
+     */
+    private ResponseFactory $responseFactory;
+
+    public function __construct(ResponseFactory $responseFactory)
     {
-        return $response->withStatus(302)->withHeader('Location', $location);
+        $this->responseFactory = $responseFactory;
     }
 
-    public function perm(Response $response, string $location): Response
+    public function tmp(string $location): Response
     {
-        return $response->withStatus(301)->withHeader('Location', $location);
+        $response = $this->responseFactory->createResponse(302);
+        return $response->withHeader('Location', $location);
+    }
+
+    public function perm(string $location): Response
+    {
+        $response = $this->responseFactory->createResponse(301);
+        return $response->withHeader('Location', $location);
     }
 }

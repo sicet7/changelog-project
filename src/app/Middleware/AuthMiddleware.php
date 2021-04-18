@@ -22,30 +22,22 @@ class AuthMiddleware extends Middleware
     private RedirectHelper $redirectHelper;
 
     /**
-     * @var ResponseFactory
-     */
-    private ResponseFactory $responseFactory;
-
-    /**
      * AuthMiddleware constructor.
      * @param AuthHelper $authHelper
      * @param RedirectHelper $redirectHelper
-     * @param ResponseFactory $responseFactory
      */
     public function __construct(
         AuthHelper $authHelper,
-        RedirectHelper $redirectHelper,
-        ResponseFactory $responseFactory
+        RedirectHelper $redirectHelper
     ) {
         $this->authHelper = $authHelper;
         $this->redirectHelper = $redirectHelper;
-        $this->responseFactory = $responseFactory;
     }
 
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         if (!$this->authHelper->isAuthenticated()) {
-            return $this->redirectHelper->tmp($this->responseFactory->createResponse(), '/login');
+            return $this->redirectHelper->tmp( '/login');
         }
         return $handler->handle($request);
     }

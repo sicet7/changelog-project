@@ -37,6 +37,15 @@ class MessageHelper
     }
 
     /**
+     * @return array
+     */
+    public function getAllMessages()
+    {
+        $this->createSession();
+        return $_SESSION[self::KEY];
+    }
+
+    /**
      * @param string $key
      * @return bool
      */

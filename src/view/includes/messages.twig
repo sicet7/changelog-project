@@ -1,0 +1,12 @@
+{% if msg.error is defined or msg.success is defined %}
+    <div class="row m-0">
+        <div class="col-12 py-3">
+            {% if msg.error is defined %}
+                <div class="alert alert-danger" role="alert">{{ msg.error }}</div>
+            {% endif %}
+            {% if msg.success is defined %}
+                <div class="alert alert-success" role="alert">{{ msg.success }}</div>
+            {% endif %}
+        </div>
+    </div>
+{% endif %}
