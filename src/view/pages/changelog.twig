@@ -107,8 +107,8 @@
                     {% endembed %}
                 </div>
             </div>
+            {% include "includes/messages.twig" %}
             {% block changelogContent %}
-                {% include "includes/messages.twig" %}
                 {% if selected is defined %}
                     {% if selected.edit_mode is defined %}
                         <div class="row m-0 border-bottom">

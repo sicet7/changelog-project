@@ -193,6 +193,22 @@ class LogEntry implements EntityInterface
     }
 
     /**
+     * @param Log $log
+     */
+    public function setLog(Log $log): void
+    {
+        $this->log = $log;
+    }
+
+    /**
+     * @param \DateTimeImmutable $createdAt
+     */
+    public function setCreatedAt(\DateTimeImmutable $createdAt): void
+    {
+        $this->createdAt = $createdAt;
+    }
+
+    /**
      * @inheritDoc
      */
     public static function loadMetadata(ClassMetadata $metadata)

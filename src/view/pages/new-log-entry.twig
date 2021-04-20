@@ -27,6 +27,7 @@
             <form action="/changelogs/entry/save" method="POST" enctype="multipart/form-data">
                 <input type="hidden" name="id" value="{{ new_id }}"/>
                 <input type="hidden" name="log_id" value="{{ selected.id }}"/>
+                <input type="hidden" name="timediff" id="timediff" value="0">
                 <div class="form-group required">
                     <label for="initiated_by">Initiated By</label>
                     <input type="text"
@@ -90,14 +91,37 @@
                             if (!input.hasAttribute('disabled')) {
                                 input.setAttribute('disabled', 'disabled');
                             }
+                            input.value = getCurrentTimestamp();
                         } else {
                             if (input.hasAttribute('disabled')) {
                                 input.removeAttribute('disabled');
                             }
                         }
                     }
+                    function setTimezone() {
+                        document.getElementById('timediff').value = (new Date()).getTimezoneOffset();
+                    }
+                    function getCurrentTimestamp()
+                    {
+                        var cur = new Date();
+                        var year = cur.getFullYear();
+                        var month = ('0' + (cur.getMonth()+1)).slice(-2);
+                        var date = ('0' + cur.getDate()).slice(-2);
+                        var hours = ('0' + cur.getHours()).slice(-2);
+                        var minutes = ('0' + cur.getMinutes()).slice(-2);
+                        var seconds = ('0' + cur.getSeconds()).slice(-2);
+                        return year + '-' + month + '-' + date + ' ' + hours + ':' + minutes + ':' + seconds;
+                    }
+                    setInterval(processNow, 1000);
                     processNow();
-                    $( "#created_at" ).datepicker({});
+                    setTimezone();
+                    $( "#created_at" ).flatpickr({
+                        dateFormat: "Y-m-d H:i:S",
+                        enableTime: true,
+                        enableSeconds: true,
+                        time_24hr: true,
+                        weekNumbers: true,
+                    });
                 </script>
                 <button type="submit" class="btn btn-primary">Save</button>
             </form>

@@ -3,6 +3,8 @@
 namespace App\Controllers;
 
 use App\Database\Entities\Log;
+use App\Database\Entities\LogEntry;
+use App\Database\Repositories\LogEntryRepository;
 use App\Database\Repositories\LogRepository;
 use App\Exceptions\NoSuchEntityException;
 use App\Helpers\ContextHelper;
@@ -49,6 +51,11 @@ class ChangeLogController extends AbstractController
      */
     private ResourceHelper $resourceHelper;
 
+    /**
+     * @var LogEntryRepository
+     */
+    private LogEntryRepository $logEntryRepository;
+
     public function __construct(
         Environment $twig,
         ContextHelper $contextHelper,
@@ -57,7 +64,8 @@ class ChangeLogController extends AbstractController
         LogRepository $logRepository,
         RedirectHelper $redirectHelper,
         CommonMarkConverter $converter,
-        ResourceHelper $resourceHelper
+        ResourceHelper $resourceHelper,
+        LogEntryRepository $logEntryRepository
     ) {
         parent::__construct($twig, $contextHelper, $responseFactory);
         $this->messageHelper = $messageHelper;
@@ -66,6 +74,7 @@ class ChangeLogController extends AbstractController
         $this->converter = $converter;
         $this->responseFactory = $responseFactory;
         $this->resourceHelper = $resourceHelper;
+        $this->logEntryRepository = $logEntryRepository;
     }
 
     /**
@@ -193,7 +202,7 @@ class ChangeLogController extends AbstractController
         $existed = false;
         $isAjax = $this->isAjaxRequest($request);
         try {
-            $v = v::arrayType()->keySet(
+            $v = v::arrayType()->notEmpty()->keySet(
                 v::key('id', v::stringVal()->notEmpty()->uuid(4)),
                 v::key('name', v::stringVal()->notEmpty()),
                 v::key('description', v::stringVal())
@@ -275,7 +284,74 @@ class ChangeLogController extends AbstractController
 
     public function saveLogEntry(Request $request)
     {
-        var_dump($request->getParsedBody());
-        die;
+        $data = $request->getParsedBody();
+        try {
+            $v = v::arrayType()->notEmpty()->allOf(
+                v::key('id', v::stringVal()->notEmpty()->uuid(4)),
+                v::key('log_id', v::stringVal()->notEmpty()->uuid(4)),
+                v::key('timediff', v::stringVal()->notEmpty()->numericVal()),
+                v::key('initiated_by', v::stringVal()->notEmpty()->length(null, 200)),
+                v::key('tech', v::stringVal()->notEmpty()->length(null, 200)->email()),
+                v::key('change_description', v::stringVal()->notEmpty()),
+                v::key('device', v::stringVal(), false),
+                v::key('rollback_description', v::stringVal(), false),
+                v::oneOf(
+                    v::key('now', v::stringVal()->notEmpty()->equals('1'), false),
+                    v::key('created_at', v::stringVal()->notEmpty()->dateTime('y-m-d H:i:s'), false),
+                ),
+            );
+            $v->check($data);
+            $id = $data['id'];
+            $logId = $data['log_id'];
+            $log = $this->logRepository->getById($logId);
+
+            $initiatedBy = $data['initiated_by'];
+            $tech = $data['tech'];
+            $changeDescription = $data['change_description'];
+            $device = $data['device'] ?? null;
+            $rollbackDescription = $data['rollback_description'] ?? null;
+
+            $updated = false;
+            try {
+                $entity = $this->logEntryRepository->getById($id);
+                $updated = true;
+            } catch (NoSuchEntityException $exception) {
+                $entity = new LogEntry($log);
+            }
+
+            $entity->setInitiatedBy($initiatedBy);
+            $entity->setTech($tech);
+            $entity->setChangeDescription($changeDescription);
+            $entity->setDevice($device);
+            $entity->setRollbackDescription($rollbackDescription);
+
+            if (!isset($data['now'])) {
+                $dateTime = \DateTime::createFromFormat(
+                    'Y-m-d H:i:s',
+                    $data['created_at'],
+                    new \DateTimeZone('UTC')
+                );
+                $dateTime->add(\DateInterval::createFromDateString($data['timediff'] . 'min'));
+                $entity->setCreatedAt(\DateTimeImmutable::createFromMutable($dateTime));
+            }
+
+            $this->logEntryRepository->save($entity);
+            $msg = ($updated ? 'Updated' : 'Created');
+            $this->messageHelper->addMessage('success', 'Successfully ' . $msg . ' Log Entry');
+            return $this->redirectHelper->tmp('/changelogs/entry/' . $entity->getId());
+        } catch (\Throwable $throwable) {
+            $this->messageHelper->addMessage('error', $throwable->getMessage());
+            if ($request->hasHeader('Referer') && !empty($request->getHeader('Referer'))) {
+                $ref = $request->getHeader('Referer');
+                if (is_array($ref)) {
+                    $ref = $ref[array_keys($ref)[0]];
+                }
+                return $this->redirectHelper->tmp($ref);
+            }
+            if (!empty($data['log_id']) && is_string($data['log_id'])) {
+                return $this->redirectHelper->tmp('/changelogs/' . $data['log_id'] . '/entry/new');
+            }
+            return $this->redirectHelper->tmp('/changelogs');
+        }
     }
 }

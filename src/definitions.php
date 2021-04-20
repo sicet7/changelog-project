@@ -36,14 +36,13 @@ return [
     'http.libs' => [
         'js' => [
             '/js/jquery.min.js',
-            '/js/jquery-ui.min.js',
+            '/js/flatpickr.js',
             '/js/bootstrap.bundle.min.js',
             '/js/sweetalert2.min.js',
         ],
         'css' => [
-            '/css/jquery-ui.min.css',
-            '/css/jquery-ui.structure.min.css',
-            '/css/jquery-ui.theme.min.css',
+            '/css/flatpickr.min.css',
+            '/css/dark.css',
             '/css/bootstrap.min.css',
             '/css/font-awesome.min.css',
             '/css/sweetalert2.min.css',

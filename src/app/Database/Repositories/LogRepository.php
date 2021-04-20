@@ -37,7 +37,7 @@ class LogRepository
     /**
      * @return EntityManager
      */
-    public function getEntityManager(): EntityManager
+    protected function getEntityManager(): EntityManager
     {
         return $this->entityManager;
     }
@@ -85,7 +85,7 @@ class LogRepository
                 $this->markEntityAsUpdated($log);
             }
             $this->persist($log);
-        } catch (\Exception $exception) {
+        } catch (\Throwable $exception) {
             throw new SaveException('Failed to save Log Entity.', $exception->getCode(), $exception);
         }
     }
