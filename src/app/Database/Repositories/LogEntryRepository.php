@@ -2,6 +2,7 @@
 
 namespace App\Database\Repositories;
 
+use App\Database\Entities\Log;
 use App\Database\Entities\LogEntry;
 use App\Exceptions\NoSuchEntityException;
 use App\Exceptions\SaveException;
@@ -36,6 +37,20 @@ class LogEntryRepository
     }
 
     /**
+     * @param Log $log
+     * @return int|mixed|string
+     * @throws \Doctrine\ORM\NoResultException
+     * @throws \Doctrine\ORM\NonUniqueResultException
+     */
+    public function getEntryCount(Log $log)
+    {
+        return $this->getEntityManager()
+            ->createQuery(
+                'SELECT COUNT(u.id) FROM ' . LogEntry::class . ' u WHERE u.log = ?1'
+            )->setParameter(1, $log)->getSingleScalarResult();
+    }
+
+    /**
      * @param string $id
      * @return LogEntry
      * @throws NoSuchEntityException
@@ -67,6 +82,10 @@ class LogEntryRepository
         }
     }
 
+    /**
+     * @param LogEntry $entry
+     * @throws SaveException
+     */
     public function save(LogEntry $entry)
     {
         try {

@@ -30,3 +30,4 @@ $app->get('/changelogs/{id}/delete', [ChangeLogController::class, 'delete'])->ad
 // Entries
 $app->get('/changelogs/{id}/entry/new', [ChangeLogController::class, 'newLogEntry'])->add(AuthMiddleware::class)->setName('changelogs.entry.new');
 $app->post('/changelogs/entry/save', [ChangeLogController::class, 'saveLogEntry'])->add(AuthMiddleware::class)->setName('changelogs.entry.save');
+$app->get('/changelogs/entry/{id}', [ChangeLogController::class, 'showLogEntry'])->add(AuthMiddleware::class)->setName('changelogs.entry.show');

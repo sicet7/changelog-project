@@ -54,8 +54,8 @@ class Log implements EntityInterface
     public function __construct()
     {
         $this->id = Uuid::uuid4()->toString();
-        $this->entries = new ArrayCollection();
         $this->createdAt = new \DateTimeImmutable('now');
+        $this->entries = new ArrayCollection();
     }
 
     /**
@@ -156,7 +156,11 @@ class Log implements EntityInterface
             ->nullable(true)
             ->build();
 
-        $builder->addOneToMany('entries', LogEntry::class, 'log');
+        $builder->createOneToMany('entries', LogEntry::class)
+            ->mappedBy('log')
+            ->setOrderBy(['createdAt' => 'DESC'])
+            ->fetchExtraLazy()
+            ->build();
 
         $builder->createField('createdAt', Types::DATETIMETZ_IMMUTABLE)
             ->nullable(false)

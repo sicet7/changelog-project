@@ -2,6 +2,7 @@
 
 namespace App\Twig;
 
+use App\Helpers\TimezoneHelper;
 use App\Twig\Filters\MarkdownFilter;
 use Psr\Container\ContainerInterface;
 use Twig\TwigFilter;
@@ -29,6 +30,7 @@ class FilterContainer
                 [$this->container->get(MarkdownFilter::class), 'execute'],
                 MarkdownFilter::getOptions()
             ),
+            new TwigFilter('convertTimezone', [TimezoneHelper::class, 'convertTimezone']),
         ];
     }
 }

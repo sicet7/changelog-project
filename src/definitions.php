@@ -1,5 +1,6 @@
 <?php
 
+use App\Database\Repositories\LogEntryRepository;
 use App\Database\Repositories\LogRepository;
 use App\Helpers\AuthHelper;
 use App\Helpers\Base64Helper;
@@ -57,8 +58,8 @@ return [
     'database.entity.paths' => [
         __DIR__ . '/app/Database/Entities/',
     ],
-    'database.proxies.dir' => __DIR__ . '/app/Database/Proxies',
-    'database.proxies.namespace' => 'App\Database\Proxies',
+    'database.proxies.dir' => __DIR__ . '/cache/Database/Proxies',
+    'database.proxies.namespace' => 'Database\Proxies',
     'database.migrations.config' => [
         'table_storage' => [
             'table_name' => 'doctrine_migration_versions',

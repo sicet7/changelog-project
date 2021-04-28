@@ -8,6 +8,7 @@ use App\Database\Repositories\LogEntryRepository;
 use App\Database\Repositories\LogRepository;
 use App\Exceptions\NoSuchEntityException;
 use App\Helpers\ContextHelper;
+use App\Helpers\FilterHelper;
 use App\Helpers\MessageHelper;
 use App\Helpers\RedirectHelper;
 use App\Helpers\ResourceHelper;
@@ -56,6 +57,11 @@ class ChangeLogController extends AbstractController
      */
     private LogEntryRepository $logEntryRepository;
 
+    /**
+     * @var FilterHelper
+     */
+    private FilterHelper $filterHelper;
+
     public function __construct(
         Environment $twig,
         ContextHelper $contextHelper,
@@ -65,7 +71,8 @@ class ChangeLogController extends AbstractController
         RedirectHelper $redirectHelper,
         CommonMarkConverter $converter,
         ResourceHelper $resourceHelper,
-        LogEntryRepository $logEntryRepository
+        LogEntryRepository $logEntryRepository,
+        FilterHelper $filterHelper
     ) {
         parent::__construct($twig, $contextHelper, $responseFactory);
         $this->messageHelper = $messageHelper;
@@ -75,6 +82,7 @@ class ChangeLogController extends AbstractController
         $this->responseFactory = $responseFactory;
         $this->resourceHelper = $resourceHelper;
         $this->logEntryRepository = $logEntryRepository;
+        $this->filterHelper = $filterHelper;
     }
 
     /**
@@ -98,7 +106,7 @@ class ChangeLogController extends AbstractController
      * @param string|null $id
      * @return Response
      */
-    public function get(string $id = null)
+    public function get(Request $request, string $id = null)
     {
         try {
             $this->template = 'pages/changelog.twig';
@@ -114,6 +122,7 @@ class ChangeLogController extends AbstractController
                 $this->resourceHelper->setSelected($entity);
                 $context['navbar']['title'] = $entity->getName();
                 $context['page']['title'] .= ' | ' . $entity->getName();
+                $context = array_merge($context, $this->filterHelper->processEntryFilters($entity, $request));
             }
             return $this->renderResponse($context);
         } catch (NoSuchEntityException $exception) {
@@ -244,9 +253,31 @@ class ChangeLogController extends AbstractController
         }
     }
 
-    public function showLogEntry(string $id)
+    public function showLogEntry(Request $request, string $id)
     {
-        die('Not Implemented Yet!');
+        try {
+            $this->template = 'pages/show-log-entry.twig';
+            $entry = $this->logEntryRepository->getById($id);
+            $this->resourceHelper->setLoadLogs(true);
+            $this->resourceHelper->setSelected($entry->getLog());
+            return $this->renderResponse([
+                'page' => [
+                    'title' => 'Changelogs | Show Entry'
+                ],
+                'navbar' => [
+                    'title' => 'Show Entry'
+                ],
+            ]);
+        } catch (\Throwable $throwable) {
+            $this->messageHelper->addMessage('error', $throwable->getMessage());
+            if ($request->hasHeader('Referer') && !empty($request->getHeader('Referer'))) {
+                $ref = $request->getHeader('Referer');
+                if (is_array($ref)) {
+                    $ref = $ref[array_keys($ref)[0]];
+                }
+                return $this->redirectHelper->tmp($ref);
+            }
+        }
     }
 
     public function newLogEntry(string $id)
@@ -296,8 +327,8 @@ class ChangeLogController extends AbstractController
                 v::key('device', v::stringVal(), false),
                 v::key('rollback_description', v::stringVal(), false),
                 v::oneOf(
-                    v::key('now', v::stringVal()->notEmpty()->equals('1'), false),
-                    v::key('created_at', v::stringVal()->notEmpty()->dateTime('y-m-d H:i:s'), false),
+                    v::key('now', v::stringVal()->notEmpty()->equals('1')),
+                    v::key('created_at', v::stringVal()->notEmpty()->dateTime('y-m-d H:i:s')),
                 ),
             );
             $v->check($data);
@@ -316,15 +347,16 @@ class ChangeLogController extends AbstractController
                 $entity = $this->logEntryRepository->getById($id);
                 $updated = true;
             } catch (NoSuchEntityException $exception) {
-                $entity = new LogEntry($log);
+                $entity = new LogEntry();
             }
 
+            $entity->setLog($log);
+            $log->getEntries()->add($entity);
             $entity->setInitiatedBy($initiatedBy);
             $entity->setTech($tech);
             $entity->setChangeDescription($changeDescription);
             $entity->setDevice($device);
             $entity->setRollbackDescription($rollbackDescription);
-
             if (!isset($data['now'])) {
                 $dateTime = \DateTime::createFromFormat(
                     'Y-m-d H:i:s',

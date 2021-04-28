@@ -63,13 +63,11 @@ class LogEntry implements EntityInterface
 
     /**
      * LogEntry constructor.
-     * @param Log $log
      */
-    public function __construct(Log $log)
+    public function __construct()
     {
         $this->id = Uuid::uuid4()->toString();
         $this->createdAt = new \DateTimeImmutable('now');
-        $this->log = $log;
     }
 
     /**
@@ -121,9 +119,9 @@ class LogEntry implements EntityInterface
     }
 
     /**
-     * @return Log
+     * @return Log|null
      */
-    public function getLog(): Log
+    public function getLog(): ?Log
     {
         return $this->log;
     }
@@ -250,7 +248,11 @@ class LogEntry implements EntityInterface
             ->columnName('rollback_description')
             ->build();
 
-        $builder->addManyToOne('log', Log::class, 'entries');
+        $builder->createManyToOne('log', Log::class)
+            ->inversedBy('entries')
+            ->addJoinColumn('log_id', 'id')
+            ->fetchEager()
+            ->build();
 
         $builder->createField('createdAt', Types::DATETIMETZ_IMMUTABLE)
             ->nullable(false)
