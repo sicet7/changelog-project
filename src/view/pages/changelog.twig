@@ -18,19 +18,20 @@
         #changelog-list a[data-search-value]:hover, .selected {
             background-color: rgba(0,0,0,0.05) !important;
         }
-        #right-dropdown [aria-labelledby="navbarDropdown"] {
+        #right-dropdown [aria-labelledby="navbarDropdown"],
+        #sorting-dropdown-container .dropdown-menu {
             left: unset;
             right: 0;
         }
         table.table.table-borderless tr > *:first-child,
-        #filter-navbar ul.navbar-nav > *:first-child a {
+        #filter-navbar ul.navbar-nav > *:first-child > a {
             padding-left: 0 !important;
         }
         table.table.table-borderless tr > *:last-child,
-        #filter-navbar ul.navbar-nav > *:last-child a {
+        #filter-navbar ul.navbar-nav > *:last-child > a {
             padding-right: 0 !important;
         }
-        .clickable-row {
+        .cursor-pointer {
             cursor: pointer;
         }
     </style>
@@ -39,44 +40,7 @@
 {% block container_class %}{{ parent() }} h-100{% endblock %}
 
 {% block container %}
-    <div class="row h-100">
-        <div class="col-3 px-0 h-100">
-            <div class="list-group list-group-flush bg-light h-100 border-right" id="changelog-list">
-                <div class="list-group-item bg-transparent">
-                    <input class="form-control w-100"
-                           type="search"
-                           id="search-input"
-                           placeholder="Search"
-                           aria-label="Search">
-                    <script type="text/javascript">
-                        bootSearch(
-                            document.getElementById('search-input'),
-                            '#changelog-list [data-search-value]',
-                            'data-search-value',
-                            'none',
-                            'block'
-                        );
-                    </script>
-                </div>
-                <div class="list-group-item bg-transparent">
-                    <a class="btn btn-outline-success mr-3"
-                       href="/changelogs/create">New Changelog</a>
-                    {% if selected.new_entry_link is defined and entry_mode is not defined %}
-                        <a class="btn btn-outline-success" href="{{ selected.new_entry_link }}">Add Entry</a>
-                    {% endif %}
-                    {% if entry_mode is defined %}
-                        <a class="btn btn-outline-danger" href="{{ selected.show_link }}">Back</a>
-                    {% endif %}
-                </div>
-                {% for item in logs %}
-                    {% if selected is defined and selected.id == item.id %}
-                        {{ logitem.make(item.link, item.name, item.name, true) }}
-                    {% else %}
-                        {{ logitem.make(item.link, item.name, item.name, false) }}
-                    {% endif %}
-                {% endfor %}
-            </div>
-        </div>
+    <div class="row h-100 flex-row-reverse">
         <div class="col-9 px-0">
             <div class="row mx-0">
                 <div class="col-12 px-0">
@@ -143,10 +107,49 @@
                         </div>
                     {% endif %}
                     {% if entries.data|length > 0 %}
-                        {% include 'includes/changelog-table.twig' %}
+                        <div id="tableContent" class="row mx-0">
+                            {% include 'includes/changelog-table.twig' %}
+                        </div>
                     {% endif %}
                 {% endif %}
             {% endblock %}
+        </div>
+        <div class="col-3 px-0 h-100">
+            <div class="list-group list-group-flush bg-light h-100 border-right" id="changelog-list">
+                <div class="list-group-item bg-transparent">
+                    <input class="form-control w-100"
+                           type="search"
+                           id="search-input"
+                           placeholder="Search"
+                           aria-label="Search">
+                    <script type="text/javascript">
+                        bootSearch(
+                            document.getElementById('search-input'),
+                            '#changelog-list [data-search-value]',
+                            'data-search-value',
+                            'none',
+                            'block'
+                        );
+                    </script>
+                </div>
+                <div class="list-group-item bg-transparent">
+                    <a class="btn btn-outline-success mr-3"
+                       href="/changelogs/create">New Changelog</a>
+                    {% if selected.new_entry_link is defined and entry_mode is not defined %}
+                        <a class="btn btn-outline-success" href="{{ selected.new_entry_link }}">Add Entry</a>
+                    {% endif %}
+                    {% if entry_mode is defined %}
+                        <a class="btn btn-outline-danger" href="{{ selected.show_link }}">Back</a>
+                    {% endif %}
+                </div>
+                {% for item in logs %}
+                    {% if selected is defined and selected.id == item.id %}
+                        {{ logitem.make(item.link, item.name, item.name, true) }}
+                    {% else %}
+                        {{ logitem.make(item.link, item.name, item.name, false) }}
+                    {% endif %}
+                {% endfor %}
+            </div>
         </div>
     </div>
 {% endblock %}

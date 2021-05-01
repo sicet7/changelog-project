@@ -39,7 +39,7 @@ for ($i = 0; $i < $logCount; $i++) {
         $entry = new \App\Database\Entities\LogEntry();
         $entry->setTech($faker->email);
         $entry->setDevice($faker->text(30));
-        $entry->setInitiatedBy($faker->text);
+        $entry->setInitiatedBy($faker->text(30));
         $entry->setChangeDescription($faker->text(500));
         $entry->setRollbackDescription($faker->text(500));
         $entry->setLog($log);

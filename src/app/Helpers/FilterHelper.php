@@ -10,6 +10,7 @@ use Respect\Validation\Validator as v;
 
 class FilterHelper
 {
+    public const FIELD_ALL = 'all';
     public const FIELD_INITIATED_BY = 'initiatedBy';
     public const FIELD_TECH = 'tech';
     public const FIELD_CHANGE_DESC = 'changeDescription';
@@ -18,6 +19,7 @@ class FilterHelper
     public const FIELD_CREATED_AT = 'createdAt';
 
     public const VALID_FIELDS = [
+        self::FIELD_ALL,
         self::FIELD_INITIATED_BY,
         self::FIELD_TECH,
         self::FIELD_CHANGE_DESC,
@@ -71,6 +73,15 @@ class FilterHelper
                 'pagination' => $pagination,
                 'filter' => $filter,
                 'sorting' => $sorting,
+                'fields' => [
+                    self::FIELD_ALL => 'All',
+                    self::FIELD_INITIATED_BY => 'Initiated By',
+                    self::FIELD_TECH => 'Tech',
+                    self::FIELD_CHANGE_DESC => 'Change Description',
+                    self::FIELD_DEVICE => 'Device',
+                    self::FIELD_ROLLBACK_DESC => 'Rollback Description',
+                    self::FIELD_CREATED_AT => 'Performed',
+                ]
             ]
         ];
     }
@@ -110,12 +121,23 @@ class FilterHelper
         $data = $request->getQueryParams();
         if (!v::allOf(
             v::key('filter', v::in(self::VALID_FIELDS)),
-            v::key('value', v::stringType()->notEmpty())
+            v::key('value', v::stringType()->notEmpty()->base64())
         )->validate($data)) {
-            return [];
+            return [
+                'field' => self::FIELD_ALL,
+                'value' => ''
+            ];
         }
         $filter = $data['filter'];
         $value = $this->base64Helper->urlsafeDecode($data['value']);
+
+        if (strlen(trim($value)) < 2) {
+            return [
+                'field' => self::FIELD_ALL,
+                'value' => ''
+            ];
+        }
+
         if ($filter == self::FIELD_CREATED_AT) {
             $values = array_map('trim', explode('to', strtolower($value)));
             if (!v::each(v::stringType()->date('d-m-Y'))->validate($values)) {
@@ -133,6 +155,26 @@ class FilterHelper
                 ]
             ];
         }
+
+        if ($filter == self::FIELD_ALL) {
+            $first = true;
+            foreach (self::VALID_FIELDS as $field) {
+                if (in_array($field, [self::FIELD_ALL, self::FIELD_CREATED_AT])) {
+                    continue;
+                }
+                if ($first) {
+                    $criteria->where(Criteria::expr()->contains($field, $value));
+                    $first = false;
+                } else {
+                    $criteria->andWhere(Criteria::expr()->contains($field, $value));
+                }
+            }
+            return [
+                'field' => self::FIELD_ALL,
+                'value' => $value,
+            ];
+        }
+
         $criteria->where(Criteria::expr()->contains($filter, $value));
         return [
             'field' => $filter,

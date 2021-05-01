@@ -344,7 +344,7 @@ class ChangeLogController extends AbstractController
                 v::key('rollback_description', v::stringVal(), false),
                 v::oneOf(
                     v::key('now', v::stringVal()->notEmpty()->equals('1')),
-                    v::key('created_at', v::stringVal()->notEmpty()->dateTime('Y-m-d H:i:s')),
+                    v::key('created_at', v::stringVal()->notEmpty()->dateTime('d-m-Y H:i:s')),
                 ),
             );
             $v->check($data);
@@ -375,7 +375,7 @@ class ChangeLogController extends AbstractController
             $entity->setRollbackDescription($rollbackDescription);
             if (!isset($data['now'])) {
                 $dateTime = \DateTime::createFromFormat(
-                    'Y-m-d H:i:s',
+                    'd-m-Y H:i:s',
                     $data['created_at'],
                     new \DateTimeZone('UTC')
                 );
