@@ -22,6 +22,17 @@
             left: unset;
             right: 0;
         }
+        table.table.table-borderless tr > *:first-child,
+        #filter-navbar ul.navbar-nav > *:first-child a {
+            padding-left: 0 !important;
+        }
+        table.table.table-borderless tr > *:last-child,
+        #filter-navbar ul.navbar-nav > *:last-child a {
+            padding-right: 0 !important;
+        }
+        .clickable-row {
+            cursor: pointer;
+        }
     </style>
 {% endblock %}
 
@@ -95,7 +106,7 @@
                                    role="button"
                                    data-toggle="dropdown"
                                    aria-haspopup="true"
-                                   aria-expanded="false">{{ auth.claims.email|default('Unknown') }}</a>
+                                   aria-expanded="false">{{ auth.claims.email|default('Unknown')|split('@')[0] }}</a>
                                 <div class="dropdown-menu" aria-labelledby="navbarDropdown">
                                     <a class="dropdown-item" href="/">Go to Toolbox</a>
                                     <div class="dropdown-divider"></div>
@@ -121,9 +132,9 @@
                         </div>
                     {% else %}
                         <div class="row m-0 border-bottom">
-                            <div class="col-11 py-3">{{ selected.description|markdown }}</div>
+                            <div class="col-10 py-3">{{ selected.description|markdown }}</div>
                             {% if selected.delete_link is defined %}
-                                <div class="col-1 py-3 text-center">
+                                <div class="col-2 py-3 text-right">
                                     <button type="button"
                                             onclick="deleteChangelog('{{ selected.delete_link }}', '{{ selected.name }}')"
                                             class="btn btn-danger">Delete</button>
@@ -132,63 +143,7 @@
                         </div>
                     {% endif %}
                     {% if entries.data|length > 0 %}
-                        <div class="row mx-0">
-                            <div class="col-12 pt-3 pr-3">
-                                <table class="table table-borderless table-hover">
-                                    <thead>
-                                        <tr>
-                                            <th scope="col">Initiated By</th>
-                                            <th scope="col">Tech</th>
-                                            <th scope="col">Device</th>
-                                            <th scope="col">Performed</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for entry in entries.data %}
-                                        <tr data-clickable="{{ entry.getId() }}">
-                                            <td>{{ entry.getInitiatedBy() }}</td>
-                                            <td>{{ entry.getTech() }}</td>
-                                            <td>{{ entry.getDevice() }}</td>
-                                            <td>{{ entry.getCreatedAt()|convertTimezone('UTC', 'Europe/Copenhagen').format('d-m-Y H:i:s') }}</td>
-                                        </tr>
-                                        {% endfor %}
-                                        <!--<tr data-clickable="2">
-                                            <th scope="row">2</th>
-                                            <td>Jacob</td>
-                                            <td>Thornton</td>
-                                            <td>@fat</td>
-                                        </tr>
-                                        <tr data-clickable="3">
-                                            <th scope="row">3</th>
-                                            <td>Larry</td>
-                                            <td>the Bird</td>
-                                            <td>@twitter</td>
-                                        </tr>-->
-                                    </tbody>
-                                </table>
-                                {% if entries.max > 1 %}
-                                    <nav aria-label="Page navigation">
-                                        <ul class="pagination">
-                                            <li class="page-item{% if entries.page <= 1 %} disabled{% endif %}">
-                                                <a class="page-link" href="#" aria-label="Previous">
-                                                    <span aria-hidden="true">&laquo;</span>
-                                                    <span class="sr-only">Previous</span>
-                                                </a>
-                                            </li>
-                                            <li class="page-item"><a class="page-link" href="#">1</a></li>
-                                            <li class="page-item"><a class="page-link" href="#">2</a></li>
-                                            <li class="page-item"><a class="page-link" href="#">3</a></li>
-                                            <li class="page-item{% if entries.page >= entries.max %} disabled{% endif %}">
-                                                <a class="page-link" href="#" aria-label="Next">
-                                                    <span aria-hidden="true">&raquo;</span>
-                                                    <span class="sr-only">Next</span>
-                                                </a>
-                                            </li>
-                                        </ul>
-                                    </nav>
-                                {% endif %}
-                            </div>
-                        </div>
+                        {% include 'includes/changelog-table.twig' %}
                     {% endif %}
                 {% endif %}
             {% endblock %}

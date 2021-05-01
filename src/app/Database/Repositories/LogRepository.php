@@ -61,6 +61,20 @@ class LogRepository
     }
 
     /**
+     * @param string $name
+     * @return bool
+     */
+    public function isNameUnique(string $name): bool
+    {
+        $query = $this->getEntityManager()->createQuery(
+            'SELECT u FROM ' . Log::class . ' u WHERE u.name = ?1'
+        );
+        $query->setParameter(1, $name);
+        $result = $query->getResult();
+        return empty($result);
+    }
+
+    /**
      * @param string $id
      * @return bool
      */

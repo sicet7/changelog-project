@@ -6,6 +6,7 @@ use App\Database\Entities\Log;
 use App\Database\Entities\LogEntry;
 use App\Exceptions\NoSuchEntityException;
 use App\Exceptions\SaveException;
+use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\EntityManager;
 
 class LogEntryRepository
@@ -42,12 +43,36 @@ class LogEntryRepository
      * @throws \Doctrine\ORM\NoResultException
      * @throws \Doctrine\ORM\NonUniqueResultException
      */
-    public function getEntryCount(Log $log)
+    public function getEntryCount(Log $log, ?Criteria $criteria = null)
     {
-        return $this->getEntityManager()
-            ->createQuery(
-                'SELECT COUNT(u.id) FROM ' . LogEntry::class . ' u WHERE u.log = ?1'
-            )->setParameter(1, $log)->getSingleScalarResult();
+        $qb = $this->getEntityManager()->createQueryBuilder();
+        $qb->select('COUNT(u.id)')
+            ->from(LogEntry::class, 'u')
+            ->where('u.log = :logIdentifier');
+        $qb->setParameter('logIdentifier', $log);
+        if ($criteria instanceof Criteria) {
+            $qb->addCriteria($criteria);
+        }
+        return $qb->getQuery()->getSingleScalarResult();
+    }
+
+    /**
+     * @param Log $log
+     * @param Criteria|null $criteria
+     * @return int|null
+     * @throws \Doctrine\ORM\Query\QueryException
+     */
+    public function getEntries(Log $log, ?Criteria $criteria = null)
+    {
+        $qb = $this->getEntityManager()->createQueryBuilder();
+        $qb->select('u')
+            ->from(LogEntry::class, 'u')
+            ->where('u.log = :logIdentifier');
+        $qb->setParameter('logIdentifier', $log);
+        if ($criteria instanceof Criteria) {
+            $qb->addCriteria($criteria);
+        }
+        return $qb->getQuery()->getResult();
     }
 
     /**

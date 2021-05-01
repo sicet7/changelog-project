@@ -2,7 +2,7 @@
 
 namespace App\Helpers;
 
-class TimezoneHelper
+class TimeHelper
 {
 
     public static function convertTimezone(\DateTimeImmutable $dateTime, string $fromTimezone ,string $toTimezone): \DateTimeImmutable

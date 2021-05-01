@@ -66,7 +66,7 @@ function deleteChangelog(deleteLocation, name)
 {
     Swal.fire({
         title: 'Are you sure?',
-        text: "You are about to delete the entire Changelog with the name\"" + name + "\".",
+        text: "You are about to delete the entire Changelog with the name \"" + name + "\".",
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#3085d6',
@@ -77,4 +77,8 @@ function deleteChangelog(deleteLocation, name)
             window.location = deleteLocation;
         }
     })
+}
+
+function gotoEntry(entry) {
+    window.location = '/changelogs/entry/' + entry;
 }

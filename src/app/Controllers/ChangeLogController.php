@@ -86,20 +86,29 @@ class ChangeLogController extends AbstractController
     }
 
     /**
-     * @param Request $request
-     * @return bool
+     * @param string $id
+     * @return Response
      */
-    protected function isAjaxRequest(Request $request): bool
+    protected function getTableContents(Request $request, string $id)
     {
-        return $request->hasHeader('X-Requested-With') && (
-            (
-                is_string($request->getHeader('X-Requested-With')) &&
-                strtolower($request->getHeader('X-Requested-With')) == 'xmlhttprequest'
-            ) || (
-                is_array($request->getHeader('X-Requested-With')) &&
-                in_array('xmlhttprequest', array_map('strtolower', $request->getHeader('X-Requested-With')))
-            )
-        );
+        try {
+            $this->template = 'includes/changelog-table-twig';
+            $entity = $this->logRepository->getById($id);
+            $this->resourceHelper->setSelected($entity);
+            $context = array_merge([
+                'page' => [
+                    'title' => 'ChangeLogs | ' . $entity->getName(),
+                ],
+                'navbar' => [
+                    'title' => $entity->getName(),
+                ],
+            ], $this->filterHelper->processEntryFilters($entity, $request));
+            return $this->renderResponse($context);
+        } catch (NoSuchEntityException $noSuchEntityException) {
+            return $this->responseFactory->createResponse(404, $noSuchEntityException->getMessage());
+        } catch (\Throwable $exception) {
+            return $this->responseFactory->createResponse(400, $exception->getMessage());
+        }
     }
 
     /**
@@ -109,6 +118,13 @@ class ChangeLogController extends AbstractController
     public function get(Request $request, string $id = null)
     {
         try {
+            if ($this->isAjaxRequest($request)) {
+                if (!v::stringType()->uuid(4)->validate($id)) {
+                    return $this->responseFactory
+                        ->createResponse(400, 'Invalid Log id.');
+                }
+                return $this->getTableContents($request, $id);
+            }
             $this->template = 'pages/changelog.twig';
             $this->resourceHelper->setLoadLogs(true);
             $context = [
@@ -328,7 +344,7 @@ class ChangeLogController extends AbstractController
                 v::key('rollback_description', v::stringVal(), false),
                 v::oneOf(
                     v::key('now', v::stringVal()->notEmpty()->equals('1')),
-                    v::key('created_at', v::stringVal()->notEmpty()->dateTime('y-m-d H:i:s')),
+                    v::key('created_at', v::stringVal()->notEmpty()->dateTime('Y-m-d H:i:s')),
                 ),
             );
             $v->check($data);

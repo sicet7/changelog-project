@@ -6,6 +6,7 @@ use App\Database\EntityInterface;
 use App\Database\Repositories\LogRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\Selectable;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Mapping\Builder\ClassMetadataBuilder;
@@ -29,9 +30,9 @@ class Log implements EntityInterface
     private ?string $description = null;
 
     /**
-     * @var Collection
+     * @var Collection&Selectable
      */
-    private Collection $entries;
+    private $entries;
 
     /**
      * @var \DateTimeImmutable
@@ -83,7 +84,7 @@ class Log implements EntityInterface
     }
 
     /**
-     * @return Collection
+     * @return Collection&Selectable
      */
     public function getEntries()
     {
