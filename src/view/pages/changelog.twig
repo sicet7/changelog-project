@@ -34,6 +34,9 @@
         .cursor-pointer {
             cursor: pointer;
         }
+        .cursor-default {
+            cursor: default;
+        }
     </style>
 {% endblock %}
 
@@ -106,11 +109,9 @@
                             {% endif %}
                         </div>
                     {% endif %}
-                    {% if entries.data|length > 0 %}
                         <div id="tableContent" class="row mx-0">
                             {% include 'includes/changelog-table.twig' %}
                         </div>
-                    {% endif %}
                 {% endif %}
             {% endblock %}
         </div>

@@ -4,13 +4,12 @@
             <nav class="navbar navbar-expand-lg navbar-light bg-transparent px-0" id="filter-navbar">
                 <ul class="navbar-nav mr-3">
                     <li class="nav-item dropdown" id="filterDropdown">
-                        <a href="#"
-                           class="nav-link dropdown-toggle"
+                        <p class="nav-link dropdown-toggle mb-0"
                            id="filterNavbarDropdown"
                            role="button"
                            data-toggle="dropdown"
                            aria-haspopup="true"
-                           aria-expanded="false">{{ entries.fields[entries.filter.field] }}</a>
+                           aria-expanded="false">{{ entries.fields[entries.filter.field] }}</p>
                         <div class="dropdown-menu" aria-labelledby="filterNavbarDropdown">
                             <h6 class="dropdown-header">Filter by</h6>
                             {% for field, name in entries.fields %}
@@ -23,8 +22,15 @@
                     </li>
                 </ul>
                 <form class="form-inline my-2 mr-auto">
-                    <input class="form-control mr-sm-2" type="search" name="value" id="valueInput" placeholder="Search" aria-label="Search">
-                    <button class="btn btn-outline-success my-2 my-sm-0" type="button">Search</button>
+                    <input class="form-control mr-2"
+                           type="search"
+                           name="value"
+                           id="valueInput"
+                           {% if entries.filter.field != 'createdAt' %} value="{{ entries.filter.value }}" {% endif %}
+                           placeholder="Search"
+                           aria-label="Search">
+                    <button class="btn btn-outline-success my-2 my-sm-0" onclick="triggerSearch()" type="button">Search</button>
+                    <button class="btn btn-outline-danger my-2 ml-2" onclick="resetSearchAndFilters()" type="button">Reset</button>
                 </form>
                 {% if entries.filter.field == 'createdAt' %}
                     <script type="text/javascript">
@@ -32,10 +38,17 @@
                             mode: "range",
                             dateFormat: "d-m-Y",
                             weekNumbers: true,
-                            maxDate: "today"
+                            maxDate: "today",
+                            defaultDate: [
+                                '{{ entries.filter.value[0] }}',
+                                '{{ entries.filter.value[1] }}'
+                            ]
                         });
                     </script>
                 {% endif %}
+                <script type="text/javascript">
+                    document.addEventListener('keydown', enterSearch);
+                </script>
                 <ul class="navbar-nav ml-3">
                     <li class="nav-item dropdown" id="sorting-dropdown-container">
                         <a href="#"
@@ -67,26 +80,28 @@
     </div>
     <div class="row">
         <div class="col-12">
-            <table id="entry-table" class="table table-borderless table-hover">
-                <thead>
-                <tr>
-                    <th scope="col">Initiated By</th>
-                    <th scope="col">Tech</th>
-                    <th scope="col">Device</th>
-                    <th scope="col">Performed</th>
-                </tr>
-                </thead>
-                <tbody>
-                {% for entry in entries.data %}
-                    <tr onclick="gotoEntry('{{ entry.getId() }}')" class="cursor-pointer">
-                        <td>{{ entry.getInitiatedBy() }}</td>
-                        <td>{{ entry.getTech()|split('@')[0] }}</td>
-                        <td>{{ entry.getDevice() }}</td>
-                        <td>{{ entry.getCreatedAt()|convertTimezone('UTC', 'Europe/Copenhagen').format('d-m-Y H:i:s') }}</td>
+            {% if entries.data|length >= 1 %}
+                <table id="entry-table" class="table table-borderless table-hover">
+                    <thead>
+                    <tr>
+                        <th scope="col">Initiated By</th>
+                        <th scope="col">Tech</th>
+                        <th scope="col">Device</th>
+                        <th scope="col">Performed</th>
                     </tr>
-                {% endfor %}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                    {% for entry in entries.data %}
+                        <tr onclick="gotoEntry('{{ entry.getId() }}')" class="cursor-pointer">
+                            <td>{{ entry.getInitiatedBy() }}</td>
+                            <td>{{ entry.getTech()|split('@')[0] }}</td>
+                            <td>{{ entry.getDevice() }}</td>
+                            <td>{{ entry.getCreatedAt()|convertTimezone('UTC', 'Europe/Copenhagen').format('d-m-Y H:i:s') }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            {% endif %}
         </div>
     </div>
     {% if entries.pagination.max > 1 %}
@@ -95,16 +110,22 @@
                 <nav aria-label="Page navigation">
                     <ul class="pagination justify-content-center">
                         <li class="page-item{% if entries.pagination.current <= 1 %} disabled{% endif %}">
-                            <a class="page-link" href="#" aria-label="Previous">
+                            <a class="page-link" href="{{ entries.pagination.previous }}" aria-label="Previous">
                                 <span aria-hidden="true">&laquo;</span>
                                 <span class="sr-only">Previous</span>
                             </a>
                         </li>
-                        <!--<li class="page-item"><a class="page-link" href="#">1</a></li>
-                        <li class="page-item"><a class="page-link" href="#">2</a></li>
-                        <li class="page-item"><a class="page-link" href="#">3</a></li>-->
+                        {% for p, url in entries.pagination.pages %}
+                            <li class="page-item{% if p == entries.pagination.current %} active{% endif %}">
+                                {% if p != entries.pagination.current %}
+                                    <a class="page-link" href="{{ url }}">{{ p }}</a>
+                                {% else %}
+                                    <p class="page-link cursor-default">{{ p }}</p>
+                                {% endif %}
+                            </li>
+                        {% endfor %}
                         <li class="page-item{% if entries.pagination.current >= entries.pagination.max %} disabled{% endif %}">
-                            <a class="page-link" href="#" aria-label="Next">
+                            <a class="page-link" href="{{ entries.pagination.next }}" aria-label="Next">
                                 <span aria-hidden="true">&raquo;</span>
                                 <span class="sr-only">Next</span>
                             </a>

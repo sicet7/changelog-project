@@ -28,6 +28,15 @@ class FilterHelper
         self::FIELD_CREATED_AT,
     ];
 
+    public const PARAMS = [
+        'page',
+        'size',
+        'filter',
+        'value',
+        'sort',
+        'dir',
+    ];
+
     public const VALID_DIRS = [
         'DESC',
         'ASC'
@@ -121,7 +130,7 @@ class FilterHelper
         $data = $request->getQueryParams();
         if (!v::allOf(
             v::key('filter', v::in(self::VALID_FIELDS)),
-            v::key('value', v::stringType()->notEmpty()->base64())
+            v::key('value', v::stringType()->notEmpty())
         )->validate($data)) {
             return [
                 'field' => self::FIELD_ALL,
@@ -143,10 +152,17 @@ class FilterHelper
             if (!v::each(v::stringType()->date('d-m-Y'))->validate($values)) {
                 return [];
             }
-            $start = \DateTimeImmutable::createFromFormat('d-m-Y', $values[0]);
-            $stop = \DateTimeImmutable::createFromFormat('d-m-Y', $values[1]);
-            $criteria->where(Criteria::expr()->gte('u' . $filter, $start))
-                ->andWhere(Criteria::expr()->lte('u' . $filter, $stop));
+            if (count($values) == 1) {
+                $start = \DateTime::createFromFormat('d-m-Y', $values[0]);
+                $stop = \DateTime::createFromFormat('d-m-Y', $values[0]);
+            } else {
+                $start = \DateTime::createFromFormat('d-m-Y', $values[0]);
+                $stop = \DateTime::createFromFormat('d-m-Y', $values[1]);
+            }
+            $start->setTime(0,0,1);
+            $stop->setTime(23,59,59);
+            $criteria->where(Criteria::expr()->gte($filter, $start->format('Y-m-d H:i:s')))
+                ->andWhere(Criteria::expr()->lte($filter, $stop->format('Y-m-d H:i:s')));
             return [
                 'field' => $filter,
                 'value' => [
@@ -166,7 +182,7 @@ class FilterHelper
                     $criteria->where(Criteria::expr()->contains($field, $value));
                     $first = false;
                 } else {
-                    $criteria->andWhere(Criteria::expr()->contains($field, $value));
+                    $criteria->orWhere(Criteria::expr()->contains($field, $value));
                 }
             }
             return [
@@ -182,6 +198,14 @@ class FilterHelper
         ];
     }
 
+    /**
+     * @param Request $request
+     * @param Log $log
+     * @param Criteria $criteria
+     * @return array
+     * @throws \Doctrine\ORM\NoResultException
+     * @throws \Doctrine\ORM\NonUniqueResultException
+     */
     protected function pagination(Request $request, Log $log, Criteria $criteria)
     {
         $maxCount = $this->logEntryRepository->getEntryCount($log, $criteria);
@@ -191,9 +215,20 @@ class FilterHelper
         $offset = ($page-1)*$size;
         $criteria->setFirstResult($offset)
             ->setMaxResults($size);
+        $pages = [];
+        $i = $page-5;
+        while(count($pages) < 5 && $i < $page+20) {
+            if ($i > 0 && $i <= $highestPage) {
+                $pages[$i] = $this->getPageUrl($i);
+            }
+            $i++;
+        }
         return [
             'current' => $page,
-            'max' => $highestPage
+            'max' => $highestPage,
+            'pages' => $pages,
+            'previous' => ($page-1 > 0 ? $this->getPageUrl($page-1) : '#'),
+            'next' => ($page+1 <=  $highestPage  ? $this->getPageUrl($page+1) : '#'),
         ];
     }
 
@@ -219,4 +254,31 @@ class FilterHelper
         return $default;
     }
 
+    /**
+     * @param int|string $i
+     * @return string
+     */
+    protected function getPageUrl($i)
+    {
+        $uri = $_SERVER['DOCUMENT_URI'];
+        $gets = $_GET;
+        $gets['page'] = $i;
+        return $uri . '?' . http_build_query($gets);
+    }
+
+    /**
+     * @return string
+     */
+    protected function getResetUrl()
+    {
+        $uri = $_SERVER['DOCUMENT_URI'];
+        $gets = $_GET;
+        foreach ($gets as $key => $get) {
+            if (in_array($key, self::PARAMS)) {
+                unset($gets[$key]);
+            }
+        }
+        $query = (empty($gets) ? '' : '?' . http_build_query($gets));
+        return $uri . $query;
+    }
 }

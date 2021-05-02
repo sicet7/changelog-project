@@ -59,7 +59,7 @@ function saveEdit(id, newLocation)
                 text: res.responseText,
             })
         }
-    })
+    });
 }
 
 function deleteChangelog(deleteLocation, name)
@@ -145,7 +145,7 @@ function getCurrentQuery()
     return parse_query_string(window.location.search.substring(1));
 }
 
-function setQuery(query)
+function setQuery(query, removes)
 {
     if (typeof query !== 'object') {
         return;
@@ -166,6 +166,9 @@ function setQuery(query)
     for (i = 0; i < currentKeys.length; i++) {
         key = currentKeys[i];
         value = current[key];
+        if (Array.isArray(removes) && removes.indexOf(key) !== -1) {
+            continue;
+        }
         if (queryString === '') {
             queryString += '?' + key + '=' + value;
         } else {
@@ -173,12 +176,48 @@ function setQuery(query)
         }
     }
 
-    window.location = href + queryString;
+    var location = href + queryString;
+
+    $.ajax({
+        url: location,
+        method: "GET",
+        success: function(data) {
+            document.getElementById('tableContent').innerHTML = data;
+            window.history.pushState({},"", location);
+        },
+        error: function(res) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: res.responseText,
+            })
+        }
+    });
+}
+
+var enterSearch = function(e) {
+    if (e.keyCode === 13) {
+        e.preventDefault();
+        triggerSearch();
+    }
 }
 
 function triggerSearch()
 {
+    var input = document.getElementById('valueInput'),
+        filter = document.querySelectorAll('#filterDropdown .dropdown-menu .dropdown-item.active[data-name="filter"][data-value]')[0];
 
+    if (input.value.trim().length < 2) {
+        return;
+    }
+
+    var inputValue = btoa(input.value),
+        filterValue = filter.getAttribute('data-value');
+
+    setQuery({
+        'filter': filterValue,
+        'value': inputValue,
+    }, ['page']);
 }
 
 function triggerSort(field, dir)
@@ -189,7 +228,14 @@ function triggerSort(field, dir)
     })
 }
 
-function triggerPagination(page)
+function resetSearchAndFilters()
 {
-
+    setQuery({}, [
+        'page',
+        'size',
+        'filter',
+        'value',
+        'sort',
+        'dir',
+    ]);
 }

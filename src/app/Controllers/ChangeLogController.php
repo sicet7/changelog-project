@@ -92,7 +92,7 @@ class ChangeLogController extends AbstractController
     protected function getTableContents(Request $request, string $id)
     {
         try {
-            $this->template = 'includes/changelog-table-twig';
+            $this->template = 'includes/changelog-table.twig';
             $entity = $this->logRepository->getById($id);
             $this->resourceHelper->setSelected($entity);
             $context = array_merge([
