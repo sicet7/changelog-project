@@ -26,30 +26,29 @@
                            type="search"
                            name="value"
                            id="valueInput"
-                           {% if entries.filter.field != 'createdAt' %} value="{{ entries.filter.value }}" {% endif %}
+                           {% if entries.filter.field != 'createdAt' %}
+                               value="{{ entries.filter.value }}"
+                           {% else %}
+                               data-start-date="{{ entries.filter.value[0] }}"
+                               data-end-date="{{ entries.filter.value[1] }}"
+                           {% endif %}
                            placeholder="Search"
                            aria-label="Search">
                     <button class="btn btn-outline-success my-2 my-sm-0" onclick="triggerSearch()" type="button">Search</button>
                     <button class="btn btn-outline-danger my-2 ml-2" onclick="resetSearchAndFilters()" type="button">Reset</button>
                 </form>
-                {% if entries.filter.field == 'createdAt' %}
-                    <script type="text/javascript">
-                        $( "#valueInput" ).flatpickr({
-                            mode: "range",
-                            dateFormat: "d-m-Y",
-                            weekNumbers: true,
-                            maxDate: "today",
-                            defaultDate: [
-                                '{{ entries.filter.value[0] }}',
-                                '{{ entries.filter.value[1] }}'
-                            ]
-                        });
-                    </script>
-                {% endif %}
-                <script type="text/javascript">
-                    document.addEventListener('keydown', enterSearch);
-                </script>
-                <ul class="navbar-nav ml-3">
+                <form class="form-inline w-25 justify-content-end pr-2">
+                    <input class="form-control w-25"
+                           id="pageSizing"
+                           type="number"
+                           name="size"
+                           min="20"
+                           max="200"
+                           placeholder="Size"
+                           value="{{ entries.pagination.size }}"
+                           aria-label="Size"/>
+                </form>
+                <ul class="navbar-nav ml-3 justify-content-end">
                     <li class="nav-item dropdown" id="sorting-dropdown-container">
                         <a href="#"
                            class="nav-link dropdown-toggle"
@@ -94,7 +93,7 @@
                     {% for entry in entries.data %}
                         <tr onclick="gotoEntry('{{ entry.getId() }}')" class="cursor-pointer">
                             <td>{{ entry.getInitiatedBy() }}</td>
-                            <td>{{ entry.getTech()|split('@')[0] }}</td>
+                            <td>{{ entry.getTech() }}</td>
                             <td>{{ entry.getDevice() }}</td>
                             <td>{{ entry.getCreatedAt()|convertTimezone('UTC', 'Europe/Copenhagen').format('d-m-Y H:i:s') }}</td>
                         </tr>

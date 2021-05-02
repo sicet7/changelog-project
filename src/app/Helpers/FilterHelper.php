@@ -209,9 +209,9 @@ class FilterHelper
     protected function pagination(Request $request, Log $log, Criteria $criteria)
     {
         $maxCount = $this->logEntryRepository->getEntryCount($log, $criteria);
-        $size = $this->getNumericQueryParam($request, 'size', 20, 200);
+        $size = $this->getNumericQueryParam($request, 'size', 20, 200, 20);
         $highestPage = (int)ceil(($maxCount/$size));
-        $page = $this->getNumericQueryParam($request, 'page', 1, $highestPage);
+        $page = $this->getNumericQueryParam($request, 'page', 1, $highestPage, 1);
         $offset = ($page-1)*$size;
         $criteria->setFirstResult($offset)
             ->setMaxResults($size);
@@ -227,6 +227,7 @@ class FilterHelper
             'current' => $page,
             'max' => $highestPage,
             'pages' => $pages,
+            'size' => $size,
             'previous' => ($page-1 > 0 ? $this->getPageUrl($page-1) : '#'),
             'next' => ($page+1 <=  $highestPage  ? $this->getPageUrl($page+1) : '#'),
         ];
@@ -237,9 +238,10 @@ class FilterHelper
      * @param string $name
      * @param int|string $default
      * @param int|string $max
+     * @param int|string $min
      * @return mixed
      */
-    protected function getNumericQueryParam(Request $request, string $name, $default, $max)
+    protected function getNumericQueryParam(Request $request, string $name, $default, $max, $min)
     {
         $hasValue = v::arrayType()->notEmpty()->key($name,
             v::notEmpty()->numericVal()->positive()
@@ -248,6 +250,9 @@ class FilterHelper
             $value = $request->getQueryParams()[$name];
             if ($value > $max) {
                 return $max;
+            }
+            if ($value < $min) {
+                return $min;
             }
             return $value;
         }
@@ -264,21 +269,5 @@ class FilterHelper
         $gets = $_GET;
         $gets['page'] = $i;
         return $uri . '?' . http_build_query($gets);
-    }
-
-    /**
-     * @return string
-     */
-    protected function getResetUrl()
-    {
-        $uri = $_SERVER['DOCUMENT_URI'];
-        $gets = $_GET;
-        foreach ($gets as $key => $get) {
-            if (in_array($key, self::PARAMS)) {
-                unset($gets[$key]);
-            }
-        }
-        $query = (empty($gets) ? '' : '?' . http_build_query($gets));
-        return $uri . $query;
     }
 }

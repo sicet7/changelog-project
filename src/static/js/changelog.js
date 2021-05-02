@@ -184,6 +184,7 @@ function setQuery(query, removes)
         success: function(data) {
             document.getElementById('tableContent').innerHTML = data;
             window.history.pushState({},"", location);
+            addEvents();
         },
         error: function(res) {
             Swal.fire({
@@ -195,6 +196,44 @@ function setQuery(query, removes)
     });
 }
 
+function addEvents() {
+    var valueInput = document.getElementById('valueInput');
+    var pageSizing = document.getElementById('pageSizing');
+    if (pageSizing) {
+        pageSizing.addEventListener('keydown', enterSize);
+    }
+    if (valueInput) {
+        valueInput.addEventListener('keydown', enterSearch);
+        var filter = getFilter();
+        if (filter.hasAttribute('data-value') && filter.getAttribute('data-value') === 'createdAt') {
+
+            var defaultDate = [];
+            if (valueInput.hasAttribute('data-start-date')) {
+                defaultDate.push(valueInput.getAttribute('data-start-date'));
+            }
+
+            if (valueInput.hasAttribute('data-end-date')) {
+                defaultDate.push(valueInput.getAttribute('data-end-date'));
+            }
+
+            var options = {
+                mode: "range",
+                dateFormat: "d-m-Y",
+                weekNumbers: true,
+                maxDate: "today",
+            };
+
+            if (defaultDate.length >= 1) {
+                options['defaultDate'] = defaultDate;
+            }
+
+            $( "#valueInput" ).flatpickr(options);
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', addEvents);
+
 var enterSearch = function(e) {
     if (e.keyCode === 13) {
         e.preventDefault();
@@ -202,10 +241,22 @@ var enterSearch = function(e) {
     }
 }
 
+var enterSize = function(e) {
+    if (e.keyCode === 13) {
+        e.preventDefault();
+        setSize(document.getElementById('pageSizing').value);
+    }
+}
+
+function getFilter()
+{
+    return document.querySelectorAll('#filterDropdown .dropdown-menu .dropdown-item.active[data-name="filter"][data-value]')[0];
+}
+
 function triggerSearch()
 {
     var input = document.getElementById('valueInput'),
-        filter = document.querySelectorAll('#filterDropdown .dropdown-menu .dropdown-item.active[data-name="filter"][data-value]')[0];
+        filter = getFilter();
 
     if (input.value.trim().length < 2) {
         return;
@@ -226,6 +277,14 @@ function triggerSort(field, dir)
         "sort": field,
         "dir": dir,
     })
+}
+
+function setSize(size)
+{
+    setQuery({
+        'page': 1,
+        'size': size,
+    });
 }
 
 function resetSearchAndFilters()

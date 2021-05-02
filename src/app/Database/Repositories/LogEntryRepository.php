@@ -39,16 +39,22 @@ class LogEntryRepository
 
     /**
      * @param Log $log
+     * @param Criteria|null $criteria
+     * @param bool $deleted
      * @return int|mixed|string
      * @throws \Doctrine\ORM\NoResultException
      * @throws \Doctrine\ORM\NonUniqueResultException
+     * @throws \Doctrine\ORM\Query\QueryException
      */
-    public function getEntryCount(Log $log, ?Criteria $criteria = null)
+    public function getEntryCount(Log $log, ?Criteria $criteria = null, bool $deleted = false)
     {
         $qb = $this->getEntityManager()->createQueryBuilder();
         $qb->select('COUNT(u.id)')
             ->from(LogEntry::class, 'u')
             ->where('u.log = :logIdentifier');
+        if (!$deleted) {
+            $qb->andWhere('u.deletedAt IS NULL');
+        }
         $qb->setParameter('logIdentifier', $log);
         if ($criteria instanceof Criteria) {
             $qb->addCriteria($criteria);
@@ -59,15 +65,19 @@ class LogEntryRepository
     /**
      * @param Log $log
      * @param Criteria|null $criteria
+     * @param bool $deleted
      * @return int|null
      * @throws \Doctrine\ORM\Query\QueryException
      */
-    public function getEntries(Log $log, ?Criteria $criteria = null)
+    public function getEntries(Log $log, ?Criteria $criteria = null, bool $deleted = false)
     {
         $qb = $this->getEntityManager()->createQueryBuilder();
         $qb->select('u')
             ->from(LogEntry::class, 'u')
             ->where('u.log = :logIdentifier');
+        if (!$deleted) {
+            $qb->andWhere('u.deletedAt IS NULL');
+        }
         $qb->setParameter('logIdentifier', $log);
         if ($criteria instanceof Criteria) {
             $qb->addCriteria($criteria);
