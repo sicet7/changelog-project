@@ -74,4 +74,20 @@ abstract class AbstractController
                 )
             );
     }
+
+    /**
+     * @param Request $request
+     * @return string|null
+     */
+    public function getReferer(Request $request): ?string
+    {
+        if (!$request->hasHeader('Referer')) {
+            return null;
+        }
+        $ref = $request->getHeader('Referer');
+        if (is_array($ref)) {
+            $ref = $ref[array_keys($ref)[0]];
+        }
+        return $ref;
+    }
 }

@@ -283,16 +283,15 @@ class ChangeLogController extends AbstractController
                 'navbar' => [
                     'title' => 'Show Entry'
                 ],
+                'entry' => $entry,
             ]);
         } catch (\Throwable $throwable) {
             $this->messageHelper->addMessage('error', $throwable->getMessage());
-            if ($request->hasHeader('Referer') && !empty($request->getHeader('Referer'))) {
-                $ref = $request->getHeader('Referer');
-                if (is_array($ref)) {
-                    $ref = $ref[array_keys($ref)[0]];
-                }
+            $ref = $this->getReferer($request);
+            if (!empty($ref)) {
                 return $this->redirectHelper->tmp($ref);
             }
+            return $this->redirectHelper->tmp('/changelogs');
         }
     }
 
@@ -311,7 +310,7 @@ class ChangeLogController extends AbstractController
                 'navbar' => [
                     'title' => 'Add Entry'
                 ],
-                'new_id' => Uuid::uuid4()->toString(),
+                'identifier' => Uuid::uuid4()->toString(),
             ]);
         } catch (\Throwable $throwable) {
             $this->messageHelper->addMessage('error', $throwable->getMessage());
@@ -319,9 +318,29 @@ class ChangeLogController extends AbstractController
         }
     }
 
-    public function deleteLogEntry(string $id)
+    public function deleteLogEntry(Request $request, string $id)
     {
-        die('Not Implemented Yet!');
+        $msg = 'You successfully deleted a LogEntry.';
+        $isAjax = $this->isAjaxRequest($request);
+        $ref = $this->getReferer($request);
+        try {
+            $entry = $this->logEntryRepository->getById($id);
+            $this->logEntryRepository->delete($entry);
+            if (!$isAjax) {
+                $this->messageHelper->addMessage('success', $msg);
+                if (!empty($ref)) {
+                    return $this->redirectHelper->tmp($ref);
+                }
+                return $this->redirectHelper->tmp('/changelogs');
+            }
+            return $this->responseFactory->createResponse(204, $msg);
+        } catch (\Throwable $throwable) {
+            $this->messageHelper->addMessage('error', $throwable->getMessage());
+            if (!empty($ref)) {
+                return $this->redirectHelper->tmp($ref);
+            }
+            return $this->redirectHelper->tmp('/changelogs');
+        }
     }
 
     public function editLogEntry(string $id)

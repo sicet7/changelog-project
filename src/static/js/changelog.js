@@ -76,7 +76,7 @@ function deleteChangelog(deleteLocation, name)
         if (result.isConfirmed) {
             window.location = deleteLocation;
         }
-    })
+    });
 }
 
 function gotoEntry(entry) {
@@ -297,4 +297,39 @@ function resetSearchAndFilters()
         'sort',
         'dir',
     ]);
+}
+
+function deleteEntry(deleteLocation, initBy)
+{
+    Swal.fire({
+        title: 'Are you sure?',
+        text: "You are about to delete an Entry Initiated by \"" + initBy + "\".",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, delete it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: deleteLocation,
+                method: "DELETE",
+                success: function() {
+                    Swal.fire(
+                        'Deleted!',
+                        'Your file has been deleted.',
+                        'success'
+                    );
+                    setQuery({}, []);
+                },
+                error: function(res) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: res.responseText,
+                    })
+                }
+            });
+        }
+    });
 }

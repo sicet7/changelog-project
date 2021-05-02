@@ -25,7 +25,7 @@
     <div class="row mx-0 my-3">
         <div class="col-6 mx-auto">
             <form action="/changelogs/entry/save" method="POST" enctype="multipart/form-data">
-                <input type="hidden" name="id" value="{{ new_id }}"/>
+                <input type="hidden" name="id" value="{{ identifier }}"/>
                 <input type="hidden" name="log_id" value="{{ selected.id }}"/>
                 <input type="hidden" name="timediff" id="timediff" value="0">
                 <div class="form-group required">

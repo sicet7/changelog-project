@@ -1,4 +1,42 @@
 {% extends 'pages/changelog.twig' %}
 {% block changelogContent %}
-    <p>This is show log content</p>
+    <div class="container-fluid my-3">
+        <div class="row">
+            <div class="col-12">
+                <div class="accordion" id="descriptionContainer">
+                    <div class="card">
+                        <div class="card-header" id="changeHeading">
+                            <h2 class="mb-0">
+                                <button class="btn btn-link btn-block text-left text-body text-decoration-none"
+                                        type="button"
+                                        data-toggle="collapse"
+                                        data-target="#changeDescription"
+                                        aria-expanded="true"
+                                        aria-controls="changeDescription">Change Description</button>
+                            </h2>
+                        </div>
+
+                        <div id="changeDescription" class="collapse show" aria-labelledby="changeHeading" data-parent="#descriptionContainer">
+                            <div class="card-body">{{ entry.getChangeDescription()|markdown }}</div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header" id="rollbackHeading">
+                            <h2 class="mb-0">
+                                <button class="btn btn-link btn-block text-left collapsed text-body text-decoration-none"
+                                        type="button"
+                                        data-toggle="collapse"
+                                        data-target="#rollbackDescription"
+                                        aria-expanded="false"
+                                        aria-controls="rollbackDescription">Rollback Description</button>
+                            </h2>
+                        </div>
+                        <div id="rollbackDescription" class="collapse" aria-labelledby="rollbackHeading" data-parent="#descriptionContainer">
+                            <div class="card-body">{{ entry.getRollbackDescription()|markdown }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}

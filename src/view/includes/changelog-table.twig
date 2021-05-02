@@ -87,15 +87,26 @@
                         <th scope="col">Tech</th>
                         <th scope="col">Device</th>
                         <th scope="col">Performed</th>
+                        <th scope="col">Actions</th>
                     </tr>
                     </thead>
                     <tbody>
                     {% for entry in entries.data %}
-                        <tr onclick="gotoEntry('{{ entry.getId() }}')" class="cursor-pointer">
-                            <td>{{ entry.getInitiatedBy() }}</td>
-                            <td>{{ entry.getTech() }}</td>
-                            <td>{{ entry.getDevice() }}</td>
-                            <td>{{ entry.getCreatedAt()|convertTimezone('UTC', 'Europe/Copenhagen').format('d-m-Y H:i:s') }}</td>
+                        <tr>
+                            <td class="cursor-pointer"
+                                onclick="gotoEntry('{{ entry.getId() }}')">{{ entry.getInitiatedBy() }}</td>
+                            <td class="cursor-pointer"
+                                onclick="gotoEntry('{{ entry.getId() }}')">{{ entry.getTech() }}</td>
+                            <td class="cursor-pointer"
+                                onclick="gotoEntry('{{ entry.getId() }}')">{{ entry.getDevice() }}</td>
+                            <td class="cursor-pointer"
+                                onclick="gotoEntry('{{ entry.getId() }}')">{{ entry.getCreatedAt()|convertTimezone('UTC', 'Europe/Copenhagen').format('d-m-Y H:i:s') }}</td>
+                            <td>
+                                <button type="button" class="btn btn-primary">Edit</button>
+                                <button type="button"
+                                        class="btn btn-danger"
+                                        onclick="deleteEntry('/changelogs/entry/{{ entry.getId() }}', '{{ entry.getInitiatedBy() }}')">Delete</button>
+                            </td>
                         </tr>
                     {% endfor %}
                     </tbody>

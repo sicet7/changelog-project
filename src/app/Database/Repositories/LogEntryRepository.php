@@ -4,6 +4,7 @@ namespace App\Database\Repositories;
 
 use App\Database\Entities\Log;
 use App\Database\Entities\LogEntry;
+use App\Exceptions\DeleteException;
 use App\Exceptions\NoSuchEntityException;
 use App\Exceptions\SaveException;
 use Doctrine\Common\Collections\Criteria;
@@ -23,10 +24,16 @@ class LogEntryRepository
      */
     private \ReflectionProperty $updatedProperty;
 
+    /**
+     * @var \ReflectionProperty
+     */
+    private \ReflectionProperty $deletedProperty;
+
     public function __construct(EntityManager $entityManager)
     {
         $this->entityManager = $entityManager;
         $this->updatedProperty = new \ReflectionProperty(LogEntry::class, 'updatedAt');
+        $this->deletedProperty = new \ReflectionProperty(LogEntry::class, 'deletedAt');
     }
 
     /**
@@ -86,6 +93,26 @@ class LogEntryRepository
     }
 
     /**
+     * @param LogEntry $entry
+     * @param bool $deep
+     * @throws DeleteException
+     */
+    public function delete(LogEntry $entry, bool $deep = false)
+    {
+        try {
+            if ($deep) {
+                $this->getEntityManager()->remove($entry);
+                $this->getEntityManager()->flush();
+                return;
+            }
+            $this->markEntityAsDeleted($entry);
+            $this->persist($entry);
+        } catch (\Exception $exception) {
+            throw new DeleteException('Failed to delete Log Entity.', $exception->getCode(), $exception);
+        }
+    }
+
+    /**
      * @param string $id
      * @return LogEntry
      * @throws NoSuchEntityException
@@ -141,6 +168,16 @@ class LogEntryRepository
         $this->updatedProperty->setAccessible(true);
         $this->updatedProperty->setValue($entry, new \DateTimeImmutable('now'));
         $this->updatedProperty->setAccessible(false);
+    }
+
+    /**
+     * @param LogEntry $entry
+     */
+    protected function markEntityAsDeleted(LogEntry $entry)
+    {
+        $this->deletedProperty->setAccessible(true);
+        $this->deletedProperty->setValue($entry, new \DateTimeImmutable('now'));
+        $this->deletedProperty->setAccessible(false);
     }
 
     /**

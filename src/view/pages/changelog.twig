@@ -109,9 +109,11 @@
                             {% endif %}
                         </div>
                     {% endif %}
+                    {% if selected.edit_mode is not defined %}
                         <div id="tableContent" class="row mx-0">
                             {% include 'includes/changelog-table.twig' %}
                         </div>
+                    {% endif %}
                 {% endif %}
             {% endblock %}
         </div>
