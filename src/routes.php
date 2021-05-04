@@ -32,3 +32,4 @@ $app->get('/changelogs/{id}/entry/new', [ChangeLogController::class, 'newLogEntr
 $app->post('/changelogs/entry/save', [ChangeLogController::class, 'saveLogEntry'])->add(AuthMiddleware::class)->setName('changelogs.entry.save');
 $app->get('/changelogs/entry/{id}', [ChangeLogController::class, 'showLogEntry'])->add(AuthMiddleware::class)->setName('changelogs.entry.show');
 $app->delete('/changelogs/entry/{id}', [ChangeLogController::class, 'deleteLogEntry'])->add(AuthMiddleware::class)->setName('changelogs.entry.delete');
+$app->get('/changelogs/entry/{id}/edit', [ChangeLogController::class, 'editLogEntry'])->add(AuthMiddleware::class)->setName('changelogs.entry.edit');

@@ -34,6 +34,10 @@ return [
     'view.path' => __DIR__ . '/view',
     'cache.path' => __DIR__ . '/cache',
     'vendor.path' => __DIR__ . '/vendor',
+    'locale' => [
+        'timezone' => 'Europe/Copenhagen',
+        'format' => 'd-m-Y H:i:s',
+    ],
     'http.libs' => [
         'js' => [
             '/js/jquery.min.js',

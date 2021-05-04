@@ -14,11 +14,6 @@
             -ms-user-select: none;
             user-select: none;
         }
-        .ui-widget-content {
-            background-color: white;
-            border: 1px solid #ced4da;
-            padding: .375rem .75rem;
-        }
     </style>
 {% endblock %}
 {% block changelogContent %}
@@ -27,12 +22,14 @@
             <form action="/changelogs/entry/save" method="POST" enctype="multipart/form-data">
                 <input type="hidden" name="id" value="{{ identifier }}"/>
                 <input type="hidden" name="log_id" value="{{ selected.id }}"/>
-                <input type="hidden" name="timediff" id="timediff" value="0">
                 <div class="form-group required">
                     <label for="initiated_by">Initiated By</label>
                     <input type="text"
                            class="form-control"
                            name="initiated_by"
+                           {% if entry is defined and entry.getInitiatedBy() is defined %}
+                               value="{{ entry.getInitiatedBy()|raw }}"
+                           {% endif %}
                            required="required"
                            maxlength="200"
                            id="initiated_by">
@@ -43,7 +40,11 @@
                            class="form-control"
                            name="tech"
                            required="required"
-                           value="{{ auth.claims.email }}"
+                           {% if entry is defined and entry.getTech() is defined %}
+                               value="{{ entry.getTech()|raw }}"
+                           {% else %}
+                               value="{{ auth.claims.email|raw }}"
+                           {% endif %}
                            maxlength="200"
                            id="tech">
                 </div>
@@ -53,12 +54,15 @@
                               name="change_description"
                               required="required"
                               id="change_description"
-                              rows="3"></textarea>
+                              rows="3">{% if entry is defined and entry.getChangeDescription() is defined %}{{ entry.getChangeDescription()|raw }}{% endif %}</textarea>
                 </div>
                 <div class="form-group">
                     <label for="device">Device</label>
                     <input type="text"
                            class="form-control"
+                           {% if entry is defined and entry.getDevice() is defined %}
+                               value="{{ entry.getDevice()|raw }}"
+                           {% endif %}
                            name="device"
                            maxlength="200"
                            id="device">
@@ -68,14 +72,14 @@
                     <textarea class="form-control"
                               name="rollback_description"
                               id="rollback_description"
-                              rows="3"></textarea>
+                              rows="3">{% if entry is defined and entry.getRollbackDescription() is defined %}{{ entry.getRollbackDescription()|raw }}{% endif %}</textarea>
                 </div>
                 <div class="form-group">
                     <label for="created_at">Performed</label>
                     <div class="input-group">
                         <div class="input-group-prepend">
                             <div class="input-group-text">
-                                <input class="mr-2" style="margin-top: -1px;" onclick="processNow();" type="checkbox" checked="checked" name="now" value="1" id="now">
+                                <input class="mr-2" style="margin-top: -1px;" onclick="processNow();" type="checkbox" {% if entry is not defined or entry.getCreatedAt() is not defined %}checked="checked"{% endif %} name="now" value="1" id="now">
                                 <label class="form-check-label never-select" for="now">Now</label>
                             </div>
                         </div>
@@ -98,9 +102,6 @@
                             }
                         }
                     }
-                    function setTimezone() {
-                        document.getElementById('timediff').value = (new Date()).getTimezoneOffset();
-                    }
                     function getCurrentTimestamp()
                     {
                         var cur = new Date();
@@ -114,14 +115,20 @@
                     }
                     setInterval(processNow, 1000);
                     processNow();
-                    setTimezone();
                     $( "#created_at" ).flatpickr({
                         dateFormat: "d-m-Y H:i:S",
                         enableTime: true,
                         enableSeconds: true,
                         time_24hr: true,
                         weekNumbers: true,
-                        maxDate: "today"
+                        disable: [
+                            function (date) {
+                                return date > (new Date());
+                            },
+                        ],
+                        {% if entry is defined and entry.getCreatedAt() is defined %}
+                        defaultDate: "{{ entry.getCreatedAt()|convertTimezone(locale.timezone).format(locale.format) }}"
+                        {% endif %}
                     });
                 </script>
                 <button type="submit" class="btn btn-primary">Save</button>

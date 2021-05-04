@@ -100,9 +100,9 @@
                             <td class="cursor-pointer"
                                 onclick="gotoEntry('{{ entry.getId() }}')">{{ entry.getDevice() }}</td>
                             <td class="cursor-pointer"
-                                onclick="gotoEntry('{{ entry.getId() }}')">{{ entry.getCreatedAt()|convertTimezone('UTC', 'Europe/Copenhagen').format('d-m-Y H:i:s') }}</td>
+                                onclick="gotoEntry('{{ entry.getId() }}')">{{ entry.getCreatedAt()|convertTimezone(locale.timezone).format(locale.format) }}</td>
                             <td>
-                                <button type="button" class="btn btn-primary">Edit</button>
+                                <a href="/changelogs/entry/{{ entry.getId() }}/edit" class="btn btn-primary">Edit</a>
                                 <button type="button"
                                         class="btn btn-danger"
                                         onclick="deleteEntry('/changelogs/entry/{{ entry.getId() }}', '{{ entry.getInitiatedBy() }}')">Delete</button>

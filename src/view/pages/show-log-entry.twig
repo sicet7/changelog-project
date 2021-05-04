@@ -1,7 +1,41 @@
 {% extends 'pages/changelog.twig' %}
 {% block changelogContent %}
     <div class="container-fluid my-3">
-        <div class="row">
+        <div class="row border-bottom py-3">
+            <div class="col-4">
+                <b>Initiated By</b>
+            </div>
+            <div class="col-8">
+                <p class="mb-0">{{ entry.getInitiatedBy() }}</p>
+            </div>
+        </div>
+        <div class="row border-bottom py-3">
+            <div class="col-4">
+                <b>Tech</b>
+            </div>
+            <div class="col-8">
+                <p class="mb-0">{{ entry.getTech() }}</p>
+            </div>
+        </div>
+        {% if entry.getDevice() is defined %}
+            <div class="row border-bottom py-3">
+                <div class="col-4">
+                    <b>Device</b>
+                </div>
+                <div class="col-8">
+                    <p class="mb-0">{{ entry.getDevice() }}</p>
+                </div>
+            </div>
+        {% endif %}
+        <div class="row border-bottom py-3">
+            <div class="col-4">
+                <b>Performed</b>
+            </div>
+            <div class="col-8">
+                <p class="mb-0">{{ entry.getCreatedAt()|convertTimezone(locale.timezone).format(locale.format) }}</p>
+            </div>
+        </div>
+        <div class="row mt-3">
             <div class="col-12">
                 <div class="accordion" id="descriptionContainer">
                     <div class="card">

@@ -4,6 +4,7 @@ namespace App\Helpers;
 
 use App\Database\Entities\Log;
 use App\Database\Repositories\LogRepository;
+use Psr\Container\ContainerInterface;
 
 class ResourceHelper
 {
@@ -33,12 +34,21 @@ class ResourceHelper
     private LogRepository $logRepository;
 
     /**
+     * @var ContainerInterface
+     */
+    private ContainerInterface $container;
+
+    /**
      * ResourceHelper constructor.
      * @param LogRepository $logRepository
+     * @param ContainerInterface $container
      */
-    public function __construct(LogRepository $logRepository)
-    {
+    public function __construct(
+        LogRepository $logRepository,
+        ContainerInterface $container
+    ) {
         $this->logRepository = $logRepository;
+        $this->container = $container;
     }
 
     /**
@@ -110,7 +120,9 @@ class ResourceHelper
      */
     public function getLoadedArray(): array
     {
-        $returnArray = [];
+        $returnArray = [
+            'locale' => $this->container->get('locale'),
+        ];
 
         if ($this->isLoadLogs()) {
             $returnArray['logs'] = $this->getLogs();

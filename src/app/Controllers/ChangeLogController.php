@@ -12,7 +12,9 @@ use App\Helpers\FilterHelper;
 use App\Helpers\MessageHelper;
 use App\Helpers\RedirectHelper;
 use App\Helpers\ResourceHelper;
+use App\Helpers\TimeHelper;
 use League\CommonMark\CommonMarkConverter;
+use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Ramsey\Uuid\Uuid;
@@ -62,6 +64,11 @@ class ChangeLogController extends AbstractController
      */
     private FilterHelper $filterHelper;
 
+    /**
+     * @var ContainerInterface
+     */
+    private ContainerInterface $container;
+
     public function __construct(
         Environment $twig,
         ContextHelper $contextHelper,
@@ -72,7 +79,8 @@ class ChangeLogController extends AbstractController
         CommonMarkConverter $converter,
         ResourceHelper $resourceHelper,
         LogEntryRepository $logEntryRepository,
-        FilterHelper $filterHelper
+        FilterHelper $filterHelper,
+        ContainerInterface $container
     ) {
         parent::__construct($twig, $contextHelper, $responseFactory);
         $this->messageHelper = $messageHelper;
@@ -83,6 +91,7 @@ class ChangeLogController extends AbstractController
         $this->resourceHelper = $resourceHelper;
         $this->logEntryRepository = $logEntryRepository;
         $this->filterHelper = $filterHelper;
+        $this->container = $container;
     }
 
     /**
@@ -284,6 +293,9 @@ class ChangeLogController extends AbstractController
                     'title' => 'Show Entry'
                 ],
                 'entry' => $entry,
+                'selected' => [
+                    'edit_link' => '/changelogs/entry/' . $id . '/edit',
+                ]
             ]);
         } catch (\Throwable $throwable) {
             $this->messageHelper->addMessage('error', $throwable->getMessage());
@@ -345,7 +357,26 @@ class ChangeLogController extends AbstractController
 
     public function editLogEntry(string $id)
     {
-        die('Not Implemented Yet!');
+        try {
+            $this->template = 'pages/new-log-entry.twig';
+            $this->resourceHelper->setLoadLogs(true);
+            $entity = $this->logEntryRepository->getById($id);
+            $this->resourceHelper->setSelected($entity->getLog());
+            $this->resourceHelper->setEntryMode('add');
+            return $this->renderResponse([
+                'page' => [
+                    'title' => 'Changelogs | Edit Entry'
+                ],
+                'navbar' => [
+                    'title' => 'Edit Entry'
+                ],
+                'identifier' => $entity->getId(),
+                'entry' => $entity,
+            ]);
+        } catch (\Throwable $throwable) {
+            $this->messageHelper->addMessage('error', $throwable->getMessage());
+            return $this->redirectHelper->tmp('/changelogs');
+        }
     }
 
     public function saveLogEntry(Request $request)
@@ -355,7 +386,6 @@ class ChangeLogController extends AbstractController
             $v = v::arrayType()->notEmpty()->allOf(
                 v::key('id', v::stringVal()->notEmpty()->uuid(4)),
                 v::key('log_id', v::stringVal()->notEmpty()->uuid(4)),
-                v::key('timediff', v::stringVal()->notEmpty()->numericVal()),
                 v::key('initiated_by', v::stringVal()->notEmpty()->length(null, 200)),
                 v::key('tech', v::stringVal()->notEmpty()->length(null, 200)->email()),
                 v::key('change_description', v::stringVal()->notEmpty()),
@@ -393,13 +423,15 @@ class ChangeLogController extends AbstractController
             $entity->setDevice($device);
             $entity->setRollbackDescription($rollbackDescription);
             if (!isset($data['now'])) {
-                $dateTime = \DateTime::createFromFormat(
-                    'd-m-Y H:i:s',
-                    $data['created_at'],
-                    new \DateTimeZone('UTC')
+                $convertedDate = TimeHelper::convertTimezone(
+                    \DateTimeImmutable::createFromFormat(
+                        'd-m-Y H:i:s',
+                        $data['created_at'],
+                        new \DateTimeZone($this->container->get('locale')['timezone'])
+                    ),
+                    'UTC'
                 );
-                $dateTime->add(\DateInterval::createFromDateString($data['timediff'] . 'min'));
-                $entity->setCreatedAt(\DateTimeImmutable::createFromMutable($dateTime));
+                $entity->setCreatedAt($convertedDate);
             }
 
             $this->logEntryRepository->save($entity);
