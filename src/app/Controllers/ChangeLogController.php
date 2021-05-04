@@ -440,11 +440,8 @@ class ChangeLogController extends AbstractController
             return $this->redirectHelper->tmp('/changelogs/entry/' . $entity->getId());
         } catch (\Throwable $throwable) {
             $this->messageHelper->addMessage('error', $throwable->getMessage());
-            if ($request->hasHeader('Referer') && !empty($request->getHeader('Referer'))) {
-                $ref = $request->getHeader('Referer');
-                if (is_array($ref)) {
-                    $ref = $ref[array_keys($ref)[0]];
-                }
+            $ref = $this->getReferer($request);
+            if (!empty($ref)) {
                 return $this->redirectHelper->tmp($ref);
             }
             if (!empty($data['log_id']) && is_string($data['log_id'])) {

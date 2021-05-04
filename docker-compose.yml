@@ -33,5 +33,6 @@ services:
         container_name: database
         volumes:
             - ./database:/var/lib/mysql
+            - ./backups:/backups
         env_file:
             - .env

@@ -4,3 +4,4 @@ src/cache
 .env
 src/var
 database
+backups/*.sql
