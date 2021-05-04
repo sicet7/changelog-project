@@ -1,4 +1,6 @@
 .gitattributes export-ignore
 .gitignore export-ignore
+faker.sh export-ignore
+src/faker.php export-ignore
 src/static/* -diff
 src/static/* linguist-vendored

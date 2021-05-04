@@ -5,3 +5,6 @@ src/cache
 src/var
 database
 backups/*.sql
+src/composer.phar
+.pw
+.db
