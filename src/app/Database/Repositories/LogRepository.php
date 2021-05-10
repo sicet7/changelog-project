@@ -7,6 +7,7 @@ use App\Exceptions\DeleteException;
 use App\Exceptions\NoSuchEntityException;
 use App\Exceptions\SaveException;
 use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\Query\Expr\OrderBy;
 
 class LogRepository
 {
@@ -130,9 +131,14 @@ class LogRepository
      */
     public function getAllLogs(bool $includeDeleted = false)
     {
-        $query = $this->getEntityManager()->createQuery(
-            'SELECT u FROM ' . Log::class . ' u' . (!$includeDeleted ? ' WHERE u.deletedAt IS NULL' : '')
-        );
+        $qb = $this->getEntityManager()->createQueryBuilder();
+        $qb->select('u')
+            ->from(Log::class, 'u');
+        if (!$includeDeleted) {
+            $qb->where('u.deletedAt IS NULL');
+        }
+        $qb->orderBy(new OrderBy('name', 'ASC'));
+        $query = $qb->getQuery();
         return $query->getResult();
     }
 

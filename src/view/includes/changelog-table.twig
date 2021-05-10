@@ -85,6 +85,7 @@
                     <tr>
                         <th scope="col">Initiated By</th>
                         <th scope="col">Tech</th>
+                        <th scope="col">Change Description</th>
                         <th scope="col">Device</th>
                         <th scope="col">Performed</th>
                         <th scope="col">Actions</th>
@@ -97,6 +98,8 @@
                                 onclick="gotoEntry('{{ entry.getId() }}')">{{ entry.getInitiatedBy() }}</td>
                             <td class="cursor-pointer"
                                 onclick="gotoEntry('{{ entry.getId() }}')">{{ entry.getTech() }}</td>
+                            <td class="cursor-pointer"
+                                onclick="gotoEntry('{{ entry.getId() }}')">{{ entry.getChangeDescription()|slice(0, 100) }}</td>
                             <td class="cursor-pointer"
                                 onclick="gotoEntry('{{ entry.getId() }}')">{{ entry.getDevice() }}</td>
                             <td class="cursor-pointer"
