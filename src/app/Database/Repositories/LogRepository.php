@@ -137,7 +137,7 @@ class LogRepository
         if (!$includeDeleted) {
             $qb->where('u.deletedAt IS NULL');
         }
-        $qb->orderBy(new OrderBy('name', 'ASC'));
+        $qb->orderBy('u.name', 'ASC');
         $query = $qb->getQuery();
         return $query->getResult();
     }

@@ -8,3 +8,9 @@ backups/*.sql
 src/composer.phar
 .pw
 .db
+rootSsl.crt
+rootSsl.key
+rootSsl.srl
+ssl.crt
+ssl.key
+ssl.pem
