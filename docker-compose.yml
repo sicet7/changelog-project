@@ -9,6 +9,10 @@ services:
         volumes:
             - ./src:/var/www/html
             - ./default.conf:/etc/nginx/conf.d/default.conf
+            - ./secure.conf:/etc/nginx/conf.d/secure.conf
+            - ./ssl.crt:/var/www/ssl.crt:ro
+            - ./ssl.key:/var/www/ssl.key:ro
+            - ./ssl.pem:/var/www/ssl.pem:ro
         links:
             - php
         depends_on:
