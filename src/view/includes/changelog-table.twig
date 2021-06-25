@@ -36,6 +36,9 @@
                            aria-label="Search">
                     <button class="btn btn-outline-success my-2 my-sm-0" onclick="triggerSearch()" type="button">Search</button>
                     <button class="btn btn-outline-danger my-2 ml-2" onclick="resetSearchAndFilters()" type="button">Reset</button>
+                    {% if selected.new_entry_link is defined and entry_mode is not defined %}
+                        <a class="btn btn-outline-success ml-2" href="{{ selected.new_entry_link }}">Add Entry</a>
+                    {% endif %}
                 </form>
                 <form class="form-inline w-25 justify-content-end pr-2">
                     <input class="form-control w-25"
